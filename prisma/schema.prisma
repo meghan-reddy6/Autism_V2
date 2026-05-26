@@ -1,0 +1,28 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-py"
+  interface = "asyncio"
+}
+
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  role         String       @default("CLINICIAN")
+  assessments  Assessment[]
+}
+
+model Assessment {
+  id            String   @id @default(uuid())
+  patientId     String   
+  clinicianId   String
+  scaleType     String
+  rawScores     Json     
+  totalScore    Float
+  createdAt     DateTime @default(now())
+  
+  clinician     User     @relation(fields: [clinicianId], references: [id])
+}

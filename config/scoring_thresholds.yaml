@@ -1,0 +1,9 @@
+scales:
+  M-CHAT-R:
+    low_risk: [0, 2]
+    medium_risk: [3, 7]
+    high_risk: [8, 20]
+  CARS:
+    minimal_to_no_symptoms: [15, 29.5]
+    mild_to_moderate: [30, 36.5]
+    severe: [37, 60]
