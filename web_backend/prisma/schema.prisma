@@ -1,0 +1,79 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-py"
+  interface = "asyncio"
+}
+
+// SaaS Core: The Clinic/Hospital
+model Tenant {
+  id              String           @id @default(uuid())
+  name            String
+  subscriptionTier String          @default("BASIC")
+  createdAt       DateTime         @default(now())
+
+  users           User[]
+  patients        Patient[]
+  reports         ClinicalReport[]
+}
+
+// SaaS Core: The Medical Staff
+model User {
+  id        String   @id @default(uuid())
+  tenantId  String
+  email     String   @unique
+  role      String   @default("NURSE") // Roles: ADMIN, DOCTOR, NURSE
+  passwordHash String
+  
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  reports   ClinicalReport[]
+}
+
+// Clinical Core: The Patient
+model Patient {
+  id            String   @id @default(uuid())
+  tenantId      String
+  firstName     String
+  lastName      String
+  dateOfBirth   DateTime
+  gender        String
+  parentName    String?
+  contactNumber String?
+  externalId    String?  // For future EHR/EMR integrations
+
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  reports       ClinicalReport[]
+}
+
+// Clinical Core: The Preliminary Assessment
+model ClinicalReport {
+  id             String   @id @default(uuid())
+  tenantId       String
+  patientId      String
+  authorId       String
+  
+  // Assessment Data
+  scaleType      String
+  itemScores     Json     // Raw behavioral inputs
+  totalScore     Float
+  
+  // Intake Context
+  medicalHistory String?
+  lifestyleInfo  String?
+  symptoms       Json?    // Array of objects { symptom, duration, severity }
+  doctorNotes    String?
+
+  // SaaS Workflow States
+  status         String   @default("PENDING_REVIEW") 
+  mlRiskMetadata Json?    // ML Decision Support stored cleanly here
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
+  patient        Patient  @relation(fields: [patientId], references: [id])
+  author         User     @relation(fields: [authorId], references: [id])
+}

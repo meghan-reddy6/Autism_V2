@@ -13,10 +13,11 @@ class InferenceRequest(BaseModel):
 async def analyze_score(request: InferenceRequest):
     # Mock inference for structural testing
     confidence = round(random.uniform(0.75, 0.95), 4)
-    risk_level = "Elevated Risk Profile" if request.normalized_score > 30 else "Standard Risk Profile"
+    observation = "Elevated Statistical Observation" if request.normalized_score > 30 else "Standard Statistical Observation"
     
     return {
-        "risk_assessment": risk_level,
+        "observation": observation,
         "confidence_score": confidence,
-        "model_version": "v1.0.0-xgb"
+        "model_version": "v1.0.0-xgb",
+        "disclaimer": "This is a statistical observation intended for decision support only and is not a medical diagnosis."
     }

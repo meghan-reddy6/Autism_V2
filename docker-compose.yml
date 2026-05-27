@@ -24,6 +24,8 @@ services:
     environment:
       - DATABASE_URL=postgresql://admin:securepassword@db:5432/clinical_db
       - ML_SERVICE_URL=http://ml-service:8001/analyze
+    volumes:
+      - ./config:/config
     depends_on:
       db:
         condition: service_healthy
@@ -41,8 +43,13 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
     environment:
       - NEXT_PUBLIC_API_URL=http://web-backend:8000
+    command: npm run dev
     depends_on:
       - web-backend
 
