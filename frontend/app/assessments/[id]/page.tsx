@@ -1,10 +1,8 @@
 "use client";
 
-import { AlertTriangle, BrainCircuit, Calendar, FileText, Activity, Stethoscope, User, AlertCircle, FilePlus, Phone, MapPin } from "lucide-react";
+import { AlertTriangle, BrainCircuit, Calendar, FileText, Activity, Stethoscope, User, AlertCircle, FilePlus, Phone, MapPin, CheckCircle2, XCircle } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState, useRef } from "react";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 
 function formatDate(dateString: string) {
   const date = new Date(dateString);
@@ -145,7 +143,38 @@ export default function AssessmentResult() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [feedbackNotes, setFeedbackNotes] = useState("");
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const [feedbackSuccess, setFeedbackSuccess] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
+
+  const submitFeedback = async (agreement: boolean) => {
+    setSubmittingFeedback(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:8000/api/reports/${reportId}/feedback`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          doctor_agreement: agreement,
+          doctor_notes: feedbackNotes
+        })
+      });
+      if (res.ok) {
+        setFeedbackSuccess(true);
+        setReport({ ...report, status: "REVIEWED" });
+      } else {
+        alert("Failed to submit feedback.");
+      }
+    } catch (e) {
+      alert("An error occurred.");
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchReport() {
@@ -214,26 +243,9 @@ export default function AssessmentResult() {
     window.print();
   };
 
-  const handleDownloadPDF = async () => {
-    if (!reportRef.current) return;
-    setIsGeneratingPDF(true);
-    try {
-      const element = reportRef.current;
-      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Clinical_Report_${patient.firstName || 'Patient'}_${patient.lastName || ''}.pdf`);
-    } catch (err) {
-      console.error("Error generating PDF", err);
-      alert("Failed to generate PDF. Please try again.");
-    } finally {
-      setIsGeneratingPDF(false);
-    }
+  const handleDownloadPDF = () => {
+    // Rely on native browser PDF printing which perfectly handles multi-page layouts
+    window.print();
   };
 
   return (
@@ -410,6 +422,53 @@ export default function AssessmentResult() {
               </div>
             </div>
           </section>
+
+          {/* Active Learning Validation */}
+          {report.status === "PENDING_REVIEW" && !feedbackSuccess ? (
+            <section className="bg-white border-2 border-dashed border-indigo-200 rounded-xl p-6 shadow-sm print:hidden break-inside-avoid">
+              <h2 className="text-lg font-bold text-indigo-900 flex items-center mb-4">
+                <BrainCircuit className="mr-2 h-5 w-5 text-indigo-600" /> Physician Validation (Active Learning)
+              </h2>
+              <p className="text-sm text-indigo-800 mb-4">
+                Does the ML Decision Support Insight align with your clinical judgement? Your feedback is securely logged to continuously re-train and improve the model's accuracy.
+              </p>
+              
+              <textarea
+                value={feedbackNotes}
+                onChange={(e) => setFeedbackNotes(e.target.value)}
+                placeholder="Optional notes regarding the ML's prediction..."
+                className="w-full p-3 border border-indigo-100 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none mb-4"
+                rows={2}
+              />
+              
+              <div className="flex gap-4">
+                <button
+                  onClick={() => submitFeedback(true)}
+                  disabled={submittingFeedback}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50"
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Agree with ML
+                </button>
+                <button
+                  onClick={() => submitFeedback(false)}
+                  disabled={submittingFeedback}
+                  className="flex-1 bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50"
+                >
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Disagree
+                </button>
+              </div>
+            </section>
+          ) : report.status === "REVIEWED" || feedbackSuccess ? (
+            <section className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 shadow-sm print:hidden flex items-center break-inside-avoid">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 mr-3" />
+              <div>
+                <h3 className="text-sm font-bold text-emerald-900">Clinician Verified</h3>
+                <p className="text-xs text-emerald-700">This report has been validated and the feedback has been securely logged for ML model retraining.</p>
+              </div>
+            </section>
+          ) : null}
 
           {/* Detailed Itemized Scores */}
           {report.scaleType && report.itemScores && SCALES[report.scaleType as keyof typeof SCALES] && (

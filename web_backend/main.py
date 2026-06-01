@@ -194,6 +194,63 @@ async def generate_preliminary_report(payload: PreliminaryReportPayload, current
         "decision_support": ml_metadata
     }
 
+@app.post("/api/reports/public")
+async def generate_public_report(payload: PreliminaryReportPayload):
+    total_score = sum(payload.item_scores.values())
+    
+    tenant = await db.tenant.find_first(where={"name": "Default Clinic"})
+    author = await db.user.find_first(where={"email": "doctor@defaultclinic.com"})
+    
+    if not tenant or not author:
+        raise HTTPException(status_code=500, detail="System not initialized for public submissions.")
+        
+    age_months = calculate_age_months(payload.date_of_birth)
+    
+    patient = await db.patient.create(data={
+        "tenantId": tenant.id,
+        "firstName": payload.first_name,
+        "lastName": payload.last_name,
+        "dateOfBirth": payload.date_of_birth,
+        "gender": payload.gender,
+        "parentName": payload.parent_name,
+        "contactNumber": payload.contact_number
+    })
+
+    ml_payload = {
+        "scale_type": payload.scale_type,
+        "normalized_score": total_score,
+        "age_months": age_months
+    }
+    
+    ml_metadata = {"status": "unavailable"}
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(ML_SERVICE_URL, json=ml_payload, timeout=3.0)
+            if response.status_code == 200:
+                ml_metadata = response.json()
+    except Exception as e:
+        print(f"ML Warning: {e}")
+
+    report = await db.clinicalreport.create(data={
+        "tenant": {"connect": {"id": tenant.id}},
+        "patient": {"connect": {"id": patient.id}},
+        "author": {"connect": {"id": author.id}},
+        "scaleType": payload.scale_type,
+        "itemScores": Json(payload.item_scores),
+        "totalScore": total_score,
+        "status": "PENDING_REVIEW",
+        "mlRiskMetadata": Json(ml_metadata),
+        "medicalHistory": payload.medical_history,
+        "lifestyleInfo": payload.lifestyle_info,
+        "symptoms": Json(payload.symptoms) if payload.symptoms else None,
+        "doctorNotes": payload.doctor_notes
+    })
+    
+    return {
+        "status": "success",
+        "report_id": report.id
+    }
+
 @app.get("/api/reports/{report_id}")
 async def get_report(report_id: str, current_user: Any = Depends(get_current_user)):
     report = await db.clinicalreport.find_first(
@@ -228,3 +285,52 @@ async def get_patient_reports(patient_id: str, current_user: Any = Depends(get_c
         "patient": patient,
         "reports": reports
     }
+
+class FeedbackPayload(BaseModel):
+    doctor_agreement: bool
+    doctor_notes: Optional[str] = None
+
+@app.post("/api/reports/{report_id}/feedback")
+async def submit_feedback(report_id: str, payload: FeedbackPayload, current_user: Any = Depends(get_current_user)):
+    report = await db.clinicalreport.find_first(
+        where={"id": report_id, "tenantId": current_user.tenantId},
+        include={"patient": True}
+    )
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+        
+    if report.status == "REVIEWED":
+        raise HTTPException(status_code=400, detail="Feedback already submitted")
+
+    ml_metadata = report.mlRiskMetadata or {}
+    
+    age_months = 0
+    if report.patient:
+        age_months = calculate_age_months(report.patient.dateOfBirth)
+    
+    # Store feedback
+    feedback = await db.mlfeedback.create(data={
+        "clinicalReportId": report.id,
+        "tenantId": current_user.tenantId,
+        "authorId": current_user.id,
+        "scaleType": report.scaleType,
+        "totalScore": report.totalScore,
+        "ageMonths": age_months,
+        "predictedRisk": ml_metadata.get("observation", "Unknown"),
+        "confidenceScore": ml_metadata.get("confidence_score", 0.0),
+        "doctorAgreement": payload.doctor_agreement,
+        "doctorNotes": payload.doctor_notes
+    })
+    
+    # Update report status
+    await db.clinicalreport.update(
+        where={"id": report_id},
+        data={"status": "REVIEWED"}
+    )
+    
+    return {"status": "success", "feedback_id": feedback.id}
+
+@app.get("/api/ml/training-data")
+async def get_training_data():
+    feedbacks = await db.mlfeedback.find_many()
+    return feedbacks

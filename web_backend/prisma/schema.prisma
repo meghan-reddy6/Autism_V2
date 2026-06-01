@@ -18,6 +18,7 @@ model Tenant {
   users           User[]
   patients        Patient[]
   reports         ClinicalReport[]
+  mlFeedbacks     MLFeedback[]
 }
 
 // SaaS Core: The Medical Staff
@@ -30,6 +31,7 @@ model User {
   
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
   reports   ClinicalReport[]
+  mlFeedbacks MLFeedback[]
 }
 
 // Clinical Core: The Patient
@@ -76,4 +78,29 @@ model ClinicalReport {
   tenant         Tenant   @relation(fields: [tenantId], references: [id])
   patient        Patient  @relation(fields: [patientId], references: [id])
   author         User     @relation(fields: [authorId], references: [id])
+  feedback       MLFeedback?
+}
+
+// ML Core: Active Learning Feedback Loop
+model MLFeedback {
+  id               String   @id @default(uuid())
+  clinicalReportId String   @unique
+  tenantId         String
+  authorId         String
+  
+  scaleType        String
+  totalScore       Float
+  ageMonths        Int
+  
+  predictedRisk    String
+  confidenceScore  Float
+  
+  doctorAgreement  Boolean
+  doctorNotes      String?
+  
+  createdAt        DateTime @default(now())
+
+  report           ClinicalReport @relation(fields: [clinicalReportId], references: [id])
+  tenant           Tenant         @relation(fields: [tenantId], references: [id])
+  author           User           @relation(fields: [authorId], references: [id])
 }

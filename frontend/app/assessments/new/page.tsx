@@ -16,7 +16,7 @@ function cn(...inputs: ClassValue[]) {
 // 1. Upgraded Schema with PII (Dynamic questions removed from rigid schema)
 const assessmentSchema = z.object({
   scaleType: z.enum(["CARS", "GARS-2", "M-CHAT-R"], { required_error: "Please select an assessment scale" }),
-  clinicianId: z.string().min(1, "Clinician ID is required"),
+  clinicianId: z.string().optional(),
   
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
@@ -242,24 +242,20 @@ export default function SaaSAssessmentWizard() {
     
     try {
       const token = localStorage.getItem("token");
-      if (!token) {
-        window.location.href = "/login";
-        return;
-      }
+      const endpoint = token ? "http://localhost:8000/api/reports/preliminary" : "http://localhost:8000/api/reports/public";
+      const headers: any = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
 
       const itemScores: Record<string, number> = {};
       currentScale.questions.forEach(q => {
         itemScores[q.id] = getValues(q.id);
       });
 
-      const response = await fetch("http://localhost:8000/api/reports/preliminary", {
+      const response = await fetch(endpoint, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
+        headers,
         body: JSON.stringify({
-          clinician_id: data.clinicianId,
+          clinician_id: data.clinicianId || "DOC-PUBLIC",
           first_name: data.firstName,
           last_name: data.lastName,
           date_of_birth: new Date(data.dateOfBirth).toISOString(),
@@ -282,7 +278,12 @@ export default function SaaSAssessmentWizard() {
       
       if (!response.ok) throw new Error("Failed to submit");
       const result = await response.json();
-      router.push(`/assessments/${result.report_id}`);
+      
+      if (token) {
+        router.push(`/assessments/${result.report_id}`);
+      } else {
+        router.push(`/success`);
+      }
     } catch (error) {
       console.error(error);
       setValidationError("Failed to submit to backend. Is the server running?");
