@@ -173,6 +173,7 @@ export default function SaaSAssessmentWizard() {
     trigger,
     setValue,
     watch,
+    getValues,
     formState: { errors },
   } = useForm<any>({
     resolver: zodResolver(assessmentSchema),
@@ -248,7 +249,7 @@ export default function SaaSAssessmentWizard() {
 
       const itemScores: Record<string, number> = {};
       currentScale.questions.forEach(q => {
-        itemScores[q.id] = data[q.id];
+        itemScores[q.id] = getValues(q.id);
       });
 
       const response = await fetch("http://localhost:8000/api/reports/preliminary", {

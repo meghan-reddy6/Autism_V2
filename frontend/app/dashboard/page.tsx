@@ -15,6 +15,35 @@ function formatDate(dateString: string) {
   return new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric' }).format(date);
 }
 
+function formatAge(dateString: string) {
+  if (!dateString) return "N/A";
+  const dob = new Date(dateString);
+  const now = new Date();
+  
+  let months = (now.getFullYear() - dob.getFullYear()) * 12;
+  months -= dob.getMonth();
+  months += now.getMonth();
+  
+  if (now.getDate() < dob.getDate()) {
+    months--;
+  }
+  
+  if (months < 0) return "0 Months";
+  
+  const years = Math.floor(months / 12);
+  const remainingMonths = months % 12;
+  
+  if (years === 0) return `${months} Months`;
+  return `${years} Yrs, ${remainingMonths} Mos`;
+}
+
+function getMaxScore(scaleType: string) {
+  if (scaleType === "CARS") return 60;
+  if (scaleType === "GARS-2") return 123;
+  if (scaleType === "M-CHAT-R") return 20;
+  return null;
+}
+
 export default function Dashboard() {
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,8 +137,8 @@ export default function Dashboard() {
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Patient Name</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Age (Months)</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Scale</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Age</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Scale & Score</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
                   <th className="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
@@ -132,9 +161,8 @@ export default function Dashboard() {
                   filteredReports.map((report) => {
                     const observation = report.mlRiskMetadata?.observation || "Pending";
                     const isElevated = observation.toLowerCase().includes("elevated");
-                    const ageMonths = report.patient?.dateOfBirth ? 
-                      Math.floor((new Date().getTime() - new Date(report.patient.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 30.44)) : 
-                      "N/A";
+                    const ageFormatted = formatAge(report.patient?.dateOfBirth);
+                    const maxScore = getMaxScore(report.scaleType);
                     
                     const firstName = report.patient?.firstName || "Unknown";
                     const lastName = report.patient?.lastName || "Patient";
@@ -150,21 +178,33 @@ export default function Dashboard() {
                           </Link>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-600">
-                          {ageMonths}
+                          {ageFormatted}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md text-xs font-semibold">
-                            {report.scaleType}
-                          </span>
+                          <div className="flex flex-col">
+                            <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md text-xs font-semibold w-fit mb-1">
+                              {report.scaleType}
+                            </span>
+                            <span className="text-xs font-medium text-slate-500">
+                              Score: {report.totalScore} {maxScore ? `/ ${maxScore}` : ""}
+                            </span>
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={cn(
-                            "px-2.5 py-1 rounded-md text-xs font-semibold flex w-fit items-center",
-                            isElevated ? "bg-orange-100 text-orange-700" : "bg-emerald-100 text-emerald-700"
-                          )}>
-                            <span className={cn("w-1.5 h-1.5 rounded-full mr-1.5", isElevated ? "bg-orange-500" : "bg-emerald-500")} />
-                            {observation}
-                          </span>
+                          <div className="flex flex-col gap-1">
+                            <span className={cn(
+                              "px-2.5 py-1 rounded-md text-xs font-semibold flex w-fit items-center",
+                              isElevated ? "bg-orange-100 text-orange-700" : "bg-emerald-100 text-emerald-700"
+                            )}>
+                              <span className={cn("w-1.5 h-1.5 rounded-full mr-1.5", isElevated ? "bg-orange-500" : "bg-emerald-500")} />
+                              {observation}
+                            </span>
+                            {report.mlRiskMetadata?.confidence_score && (
+                              <span className="text-[10px] font-bold text-slate-500 uppercase">
+                                Conf: {(report.mlRiskMetadata.confidence_score * 100).toFixed(1)}%
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap flex items-center text-slate-500">
                           <Calendar className="h-4 w-4 text-slate-400 mr-2" />

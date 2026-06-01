@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from typing import Dict, Any, Optional
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from prisma import Prisma
+from prisma import Prisma, Json
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
@@ -172,17 +172,17 @@ async def generate_preliminary_report(payload: PreliminaryReportPayload, current
         print(f"ML Warning: {e}")
 
     report = await db.clinicalreport.create(data={
-        "tenantId": tenant_id,
-        "patientId": patient.id,
-        "authorId": current_user.id,
+        "tenant": {"connect": {"id": tenant_id}},
+        "patient": {"connect": {"id": patient.id}},
+        "author": {"connect": {"id": current_user.id}},
         "scaleType": payload.scale_type,
-        "itemScores": payload.item_scores,
+        "itemScores": Json(payload.item_scores),
         "totalScore": total_score,
         "status": "PENDING_REVIEW",
-        "mlRiskMetadata": ml_metadata,
+        "mlRiskMetadata": Json(ml_metadata),
         "medicalHistory": payload.medical_history,
         "lifestyleInfo": payload.lifestyle_info,
-        "symptoms": payload.symptoms,
+        "symptoms": Json(payload.symptoms) if payload.symptoms else None,
         "doctorNotes": payload.doctor_notes
     })
     
@@ -196,7 +196,7 @@ async def generate_preliminary_report(payload: PreliminaryReportPayload, current
 
 @app.get("/api/reports/{report_id}")
 async def get_report(report_id: str, current_user: Any = Depends(get_current_user)):
-    report = await db.clinicalreport.find_unique(
+    report = await db.clinicalreport.find_first(
         where={"id": report_id, "tenantId": current_user.tenantId},
         include={"patient": True, "author": True}
     )
