@@ -1,51 +1,75 @@
 import Link from "next/link";
-import { Activity, UserPlus, Lock } from "lucide-react";
+import {
+  Activity,
+  UserPlus,
+  Lock,
+  Sparkles,
+  ShieldCheck,
+  Heart,
+} from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
-      <div className="text-center mb-12">
-        <div className="bg-blue-100 p-4 rounded-full inline-block mb-6">
-          <Activity className="h-12 w-12 text-blue-600" />
+    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-white">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_10%,rgba(59,130,246,0.35),transparent_18%),radial-gradient(circle_at_90%_20%,rgba(236,72,153,0.28),transparent_20%),radial-gradient(circle_at_80%_90%,rgba(34,211,238,0.22),transparent_22%)]" />
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16">
+        <div className="relative mb-12 w-full max-w-3xl rounded-[2rem] border border-white/10 bg-white/10 p-10 shadow-2xl shadow-slate-950/40 backdrop-blur-xl">
+          <div className="absolute -top-7 left-10 rounded-3xl border border-white/20 bg-slate-900/70 p-3 text-cyan-200 shadow-lg">
+            <Sparkles className="h-6 w-6" />
+          </div>
+          <div className="absolute top-8 right-10 rounded-3xl border border-white/20 bg-slate-900/70 p-3 text-sky-300 shadow-lg">
+            <ShieldCheck className="h-6 w-6" />
+          </div>
+          <div className="absolute -bottom-7 left-16 rounded-3xl border border-white/20 bg-slate-900/70 p-3 text-pink-300 shadow-lg">
+            <Heart className="h-6 w-6" />
+          </div>
+          <div className="text-center">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-xl shadow-sky-500/20">
+              <Activity className="h-8 w-8" />
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
+              Clinical SaaS Portal
+            </h1>
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-200">
+              Secure, scalable pre-assessment workflow and AI-powered decision
+              support for clinicians and families.
+            </p>
+          </div>
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900 tracking-tight">Clinical SaaS Portal</h1>
-        <p className="text-slate-500 max-w-lg mx-auto text-lg">
-          Secure, scalable pre-assessment workflow and AI-powered decision support.
-        </p>
-      </div>
 
-      <div className="grid md:grid-cols-2 gap-6 w-full max-w-4xl">
-        {/* Patient Portal Card */}
-        <Link href="/assessments/new" className="group block h-full">
-          <div className="bg-white border-2 border-transparent hover:border-blue-500 rounded-2xl p-8 shadow-sm hover:shadow-md transition-all h-full flex flex-col items-center text-center">
-            <div className="bg-blue-50 p-4 rounded-full mb-6 group-hover:bg-blue-100 transition-colors">
-              <UserPlus className="h-10 w-10 text-blue-600" />
+        <div className="grid w-full max-w-4xl gap-6 md:grid-cols-2">
+          <Link href="/assessments/new" className="group block h-full">
+            <div className="flex h-full flex-col items-center rounded-[1.75rem] border border-white/10 bg-white/95 p-8 shadow-lg shadow-slate-950/10 transition-all hover:-translate-y-1 hover:shadow-2xl">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-3xl bg-cyan-50 text-cyan-700 shadow-md">
+                <UserPlus className="h-8 w-8" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-3">Take Assessment</h2>
+              <p className="text-slate-600 mb-6 flex-grow text-center">
+                For parents and patients. Start a secure clinical questionnaire to
+                capture early insights.
+              </p>
+              <button className="w-full rounded-2xl bg-cyan-600 py-3 text-white transition-colors hover:bg-cyan-700">
+                Start Now
+              </button>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Take Assessment</h2>
-            <p className="text-slate-500 mb-6 flex-grow">
-              For parents and patients. Start a new secure clinical questionnaire. No account required.
-            </p>
-            <button className="w-full bg-blue-600 text-white font-medium py-3 rounded-lg group-hover:bg-blue-700 transition-colors">
-              Start Now
-            </button>
-          </div>
-        </Link>
+          </Link>
 
-        {/* Clinician Portal Card */}
-        <Link href="/login" className="group block h-full">
-          <div className="bg-white border-2 border-transparent hover:border-indigo-500 rounded-2xl p-8 shadow-sm hover:shadow-md transition-all h-full flex flex-col items-center text-center">
-            <div className="bg-indigo-50 p-4 rounded-full mb-6 group-hover:bg-indigo-100 transition-colors">
-              <Lock className="h-10 w-10 text-indigo-600" />
+          <Link href="/login" className="group block h-full">
+            <div className="flex h-full flex-col items-center rounded-[1.75rem] border border-white/10 bg-white/95 p-8 shadow-lg shadow-slate-950/10 transition-all hover:-translate-y-1 hover:shadow-2xl">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-3xl bg-violet-50 text-violet-700 shadow-md">
+                <Lock className="h-8 w-8" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-3">Admin Login</h2>
+              <p className="text-slate-600 mb-6 flex-grow text-center">
+                For authorized clinicians and medical staff. Access dashboards,
+                patient records, and reports.
+              </p>
+              <button className="w-full rounded-2xl bg-violet-600 py-3 text-white transition-colors hover:bg-violet-700">
+                Login to Portal
+              </button>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Admin Login</h2>
-            <p className="text-slate-500 mb-6 flex-grow">
-              For authorized clinicians and medical staff. Access dashboards and patient reports.
-            </p>
-            <button className="w-full bg-indigo-600 text-white font-medium py-3 rounded-lg group-hover:bg-indigo-700 transition-colors">
-              Login to Portal
-            </button>
-          </div>
-        </Link>
+          </Link>
+        </div>
       </div>
     </div>
   );
