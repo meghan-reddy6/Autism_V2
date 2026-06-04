@@ -1,5 +1,5 @@
 import { AdminGuard } from "@/components/AdminGuard";
-import { LayoutDashboard, Users, Building2, Settings, LogOut, Activity } from "lucide-react";
+import { LayoutDashboard, Users, Building2, Settings, LogOut, Activity, Trash2, Server } from "lucide-react";
 import Link from "next/link";
 import AdminLogoutButton from "@/components/AdminLogoutButton";
 
@@ -35,6 +35,14 @@ export default function AdminLayout({
             <Link href="/admin/users" className="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
               <Users className="w-5 h-5 mr-3 text-slate-400" />
               Global Users
+            </Link>
+            <Link href="/admin/system" className="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+              <Server className="w-5 h-5 mr-3 text-slate-400" />
+              System Health
+            </Link>
+            <Link href="/admin/recycle-bin" className="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+              <Trash2 className="w-5 h-5 mr-3 text-slate-400" />
+              Recycle Bin
             </Link>
           </nav>
           

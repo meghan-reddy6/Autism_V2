@@ -80,7 +80,11 @@ async def get_patient(
             "tenantId": current_user.tenantId
         },
         include={
-            "assessments": True,
+            "assessmentSessions": {
+                "include": {
+                    "reports": True
+                }
+            },
             "clinicalNotes": True
         }
     )
@@ -96,4 +100,34 @@ async def get_patient(
         "resourceId": patient.id
     })
     
+    # Calculate summary info
+    patient_dict = patient.model_dump() if hasattr(patient, "model_dump") else patient
+    if isinstance(patient_dict, dict):
+        patient_dict["clinicalNotesCount"] = len(patient_dict.get("clinicalNotes", []))
+        return patient_dict
+    
     return patient
+
+@router.get("/{patient_id}/assessments")
+async def get_patient_assessments(
+    patient_id: str,
+    current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "THERAPIST", "RECEPTIONIST"]))
+):
+    patient = await db.patient.find_first(
+        where={"id": patient_id, "tenantId": current_user.tenantId}
+    )
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    sessions = await db.assessmentsession.find_many(
+        where={
+            "patientId": patient_id,
+            "tenantId": current_user.tenantId
+        },
+        include={
+            "template": True,
+            "reports": True
+        },
+        order={"createdAt": "desc"}
+    )
+    return sessions

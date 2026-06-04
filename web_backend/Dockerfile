@@ -16,4 +16,7 @@ RUN prisma generate
 ENV NODE_TLS_REJECT_UNAUTHORIZED="1"
 ENV PYTHONHTTPSVERIFY="1"
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
+CMD ["./entrypoint.sh"]

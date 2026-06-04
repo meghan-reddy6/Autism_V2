@@ -12,7 +12,7 @@ class MockUser:
 
 def test_tenant_isolation_get_patient():
     from dependencies import get_current_user
-    app.dependency_overrides[get_current_user] = lambda: MockUser(role="DOCTOR", tenantId="tenant-A")
+    app.dependency_overrides[get_current_user] = lambda: MockUser(role="CLINICAL_ADMIN", tenantId="tenant-A")
     client = TestClient(app)
     
     with patch('routers.patients.db') as mock_db:

@@ -12,7 +12,7 @@ export default function ClinicLayout({
   children: React.ReactNode
 }) {
   const { user } = useAuthStore()
-  const isDoctor = user?.role === "DOCTOR" || user?.role === "PSYCHOLOGIST"
+  const isDoctor = user?.role === "DOCTOR" || user?.role === "PSYCHOLOGIST" || user?.role === "CLINICAL_ADMIN" || user?.role === "SUPERVISOR" || user?.role === "SUPER_ADMIN"
 
   return (
     <AuthGuard>

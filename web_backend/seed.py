@@ -33,7 +33,7 @@ async def seed():
             "passwordHash": hashed_pw,
             "firstName": "Gregory",
             "lastName": "House",
-            "role": "DOCTOR",
+            "role": "CLINICAL_ADMIN",
             "tenantId": tenant.id
         }
     )
@@ -52,14 +52,14 @@ async def seed():
         }
     )
 
-    # Create Parent User
+    # Create Parent User (Now Viewer)
     parent_user = await db.user.create(
         data={
             "email": "parent@portal.com",
             "passwordHash": hashed_pw,
             "firstName": "Sarah",
             "lastName": "Williams",
-            "role": "PATIENT_PARENT",
+            "role": "VIEWER",
             "tenantId": tenant.id
         }
     )

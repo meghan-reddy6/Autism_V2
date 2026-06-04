@@ -15,6 +15,7 @@ class MockSession:
         name = "CARS"
         formSchema = {}
     template = MockTemplate()
+    expiresAt = None
 
 def override_validate_token(token: str):
     if token == "valid-token":

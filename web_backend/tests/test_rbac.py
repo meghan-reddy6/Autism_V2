@@ -28,7 +28,7 @@ def test_rbac_success():
 
 def test_rbac_forbidden():
     from dependencies import get_current_user
-    app.dependency_overrides[get_current_user] = lambda: MockUser(role="DOCTOR")
+    app.dependency_overrides[get_current_user] = lambda: MockUser(role="CLINICAL_ADMIN")
     client = TestClient(app)
     
     response = client.get("/api/v1/test-rbac")

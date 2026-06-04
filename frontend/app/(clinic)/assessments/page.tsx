@@ -10,7 +10,7 @@ import { useAuthStore } from "@/lib/store"
 export default function AllAssessmentsPage() {
   const router = useRouter()
   const { user } = useAuthStore()
-  const isDoctor = user?.role === "DOCTOR" || user?.role === "PSYCHOLOGIST"
+  const isDoctor = user?.role === "DOCTOR" || user?.role === "PSYCHOLOGIST" || user?.role === "CLINICAL_ADMIN" || user?.role === "SUPERVISOR" || user?.role === "SUPER_ADMIN"
   const [assessments, setAssessments] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState("")

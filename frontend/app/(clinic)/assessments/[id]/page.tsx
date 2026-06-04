@@ -239,7 +239,7 @@ export default function AssessmentResult() {
   const reportRef = useRef<HTMLDivElement>(null);
 
   const { user } = useAuthStore();
-  const isDoctor = user?.role === "DOCTOR" || user?.role === "PSYCHOLOGIST";
+  const isDoctor = user?.role === "DOCTOR" || user?.role === "PSYCHOLOGIST" || user?.role === "CLINICAL_ADMIN" || user?.role === "SUPERVISOR" || user?.role === "SUPER_ADMIN";
 
   useEffect(() => {
     async function fetchSession() {
@@ -258,7 +258,7 @@ export default function AssessmentResult() {
   const triggerScoring = async () => {
     setLoading(true);
     try {
-      await fetchApi(`/assessment-sessions/${sessionId}/score`, { method: "POST" });
+      await fetchApi(`/reports/generate/${sessionId}`, { method: "POST" });
       const data = await fetchApi(`/assessment-sessions/${sessionId}`);
       setSession(data);
     } catch(err) {
@@ -272,11 +272,23 @@ export default function AssessmentResult() {
     if (!isDoctor) return;
     setSubmittingFeedback(true);
     try {
-      // Approve the assessment and add notes (assuming notes can be added via status or a separate endpoint in future. For now, just mark APPROVED)
-      await fetchApi(`/assessment-sessions/${sessionId}/status`, {
-        method: "PATCH",
-        body: JSON.stringify({ status: "APPROVED" })
-      });
+      const reportId = generatedReport?.id;
+      if (reportId) {
+          if (feedbackNotes) {
+             await fetchApi(`/reports/${reportId}/sections`, {
+                method: "PATCH",
+                body: JSON.stringify({ name: "Clinical Notes", content: feedbackNotes, order: 100 })
+             });
+          }
+          await fetchApi(`/reports/${reportId}/approve`, {
+            method: "PATCH",
+          });
+      } else {
+          await fetchApi(`/assessment-sessions/${sessionId}/status`, {
+            method: "PATCH",
+            body: JSON.stringify({ status: "APPROVED" })
+          });
+      }
       setFeedbackSuccess(true);
       setSession({ ...session, status: "APPROVED" });
     } catch(err) {

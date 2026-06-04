@@ -11,14 +11,22 @@ router = APIRouter(
 @router.get("/organizations")
 async def list_organizations():
     orgs = await db.tenant.find_many(
-        include={
-            "_count": {
-                "select": {"users": True, "patients": True}
-            }
-        },
         order={"createdAt": "desc"}
     )
-    return orgs
+    
+    result = []
+    for org in orgs:
+        user_count = await db.user.count(where={"tenantId": org.id})
+        patient_count = await db.patient.count(where={"tenantId": org.id})
+        
+        org_dict = org.model_dump()
+        org_dict["_count"] = {
+            "users": user_count,
+            "patients": patient_count
+        }
+        result.append(org_dict)
+        
+    return result
 
 @router.get("/users")
 async def list_users():
