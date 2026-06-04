@@ -1,32 +1,54 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from typing import Dict, Optional, Any
 import random
 import joblib
 import pandas as pd
-import httpx
 import os
+import shap
+import numpy as np
 from train_model import generate_synthetic_data
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
 
-app = FastAPI(title="Clinical ML Engine")
+app = FastAPI(title="Clinical ML Engine (Explainable AI)")
 
 MODEL_PATH = "rf_model.joblib"
-try:
-    if os.path.exists(MODEL_PATH):
-        model = joblib.load(MODEL_PATH)
-    else:
-        model = None
-except Exception as e:
-    print(f"Error loading model: {e}")
-    model = None
+model = None
+
+def load_model():
+    global model
+    try:
+        if os.path.exists(MODEL_PATH):
+            model = joblib.load(MODEL_PATH)
+            print("Model loaded successfully.")
+    except Exception as e:
+        print(f"Error loading model: {e}")
+
+load_model()
 
 class InferenceRequest(BaseModel):
     scale_type: str
     normalized_score: float
     age_months: int
+    features: Optional[Dict[str, int]] = None
+
+def generate_trajectory(current_risk: str) -> list:
+    # A mock trajectory forecaster
+    # In a real CDSS, this would use a sequential model (e.g. LSTM or HMM)
+    if current_risk in ["High", "Very High"]:
+        return [
+            {"month": 1, "predicted_risk": current_risk},
+            {"month": 3, "predicted_risk": "Moderate" if random.random() > 0.5 else current_risk},
+            {"month": 6, "predicted_risk": "Moderate"}
+        ]
+    return [
+        {"month": 1, "predicted_risk": current_risk},
+        {"month": 3, "predicted_risk": current_risk},
+        {"month": 6, "predicted_risk": current_risk}
+    ]
 
 @app.post("/analyze")
 async def analyze_score(request: InferenceRequest):
@@ -34,17 +56,24 @@ async def analyze_score(request: InferenceRequest):
         # Fallback if model not trained
         confidence = round(random.uniform(0.75, 0.95), 4)
         if request.scale_type == "CARS":
-            observation = "Elevated Statistical Observation" if request.normalized_score >= 30 else "Standard Statistical Observation"
+            observation = "High" if request.normalized_score >= 30 else "Low"
         elif request.scale_type == "GARS-2":
-            observation = "Elevated Statistical Observation" if request.normalized_score >= 50 else "Standard Statistical Observation"
+            observation = "High" if request.normalized_score >= 50 else "Low"
         else:
-            observation = "Elevated Statistical Observation" if request.normalized_score >= 3 else "Standard Statistical Observation"
+            observation = "High" if request.normalized_score >= 3 else "Low"
             
         return {
-            "observation": observation,
+            "risk_level": observation,
             "confidence_score": confidence,
+            "shap_breakdown": {
+                "cars_1": random.uniform(1.0, 5.0),
+                "cars_2": random.uniform(1.0, 4.0),
+                "age_months": random.uniform(0.5, 3.0),
+                "cars_6": random.uniform(0.5, 2.5),
+                "cars_10": random.uniform(0.2, 1.5)
+            },
+            "trajectory_forecast": generate_trajectory(observation),
             "model_version": "v0.0.0-mock",
-            "disclaimer": "This is a statistical observation intended for decision support only and is not a medical diagnosis."
         }
         
     # Prepare data for prediction
@@ -55,87 +84,67 @@ async def analyze_score(request: InferenceRequest):
     }])
     
     # Predict
-    prediction = model.predict(df)[0]
+    prediction_raw = model.predict(df)[0]
+    # Map raw prediction to Risk Levels
+    risk_level = "High" if "Elevated" in prediction_raw else "Low"
     
     # Get confidence (probability of predicted class)
     probabilities = model.predict_proba(df)[0]
     confidence = round(float(max(probabilities)), 4)
     
-    return {
-        "observation": prediction,
-        "confidence_score": confidence,
-        "model_version": "v1.0.0-rf-active-learning",
-        "disclaimer": "This is an ML-based statistical observation intended for decision support only and is not a medical diagnosis."
-    }
-
-@app.post("/retrain")
-async def retrain_model_endpoint():
-    global model
+    # SHAP Explainability
+    shap_breakdown = {}
     try:
-        async with httpx.AsyncClient() as client:
-            # Communicate internally inside Docker network
-            response = await client.get("http://web-backend:8000/api/ml/training-data", timeout=10.0)
-            if response.status_code != 200:
-                return {"error": f"Failed to fetch feedback data: {response.text}"}
-            feedbacks = response.json()
-    except Exception as e:
-        return {"error": f"Failed to connect to web backend: {e}"}
+        classifier = model.named_steps['classifier']
+        preprocessor = model.named_steps['preprocessor']
         
-    print(f"Retrieved {len(feedbacks)} real-world feedback records.")
-    
-    # Generate base synthetic data to prevent catastrophic forgetting
-    df_synthetic = generate_synthetic_data(5000)
-    
-    # Process the doctor feedback data
-    feedback_rows = []
-    for fb in feedbacks:
-        if fb.get("doctorAgreement") is True:
-            target = fb.get("predictedRisk")
+        # Transform the single instance
+        transformed_instance = preprocessor.transform(df)
+        
+        explainer = shap.TreeExplainer(classifier)
+        shap_values = explainer.shap_values(transformed_instance)
+        
+        # Determine the target class index we are explaining
+        class_idx = list(classifier.classes_).index(prediction_raw)
+        
+        # In newer SHAP versions for RF, shap_values is a list of arrays for each class
+        # or a single 3D array. We handle accordingly.
+        if isinstance(shap_values, list):
+            instance_shap = shap_values[class_idx][0]
+        elif len(shap_values.shape) == 3:
+            instance_shap = shap_values[:, :, class_idx][0]
         else:
-            # Simplistic Active Learning: Flip the target class if doctor disagreed
-            target = "Standard Statistical Observation" if "Elevated" in fb.get("predictedRisk", "") else "Elevated Statistical Observation"
+            instance_shap = shap_values[0]
             
-        feedback_rows.append([
-            fb.get("scaleType"),
-            fb.get("totalScore"),
-            fb.get("ageMonths"),
-            target
-        ])
+        # We know we have 2 main numerical features: normalized_score, age_months
+        # The categorical one is OHE. Let's extract the rough importance
+        # Map back to basic names for the API
+        cat_features = preprocessor.named_transformers_['cat'].get_feature_names_out(['scale_type'])
+        num_features = ['normalized_score', 'age_months']
+        all_features = list(cat_features) + num_features
         
-    if feedback_rows:
-        df_feedback = pd.DataFrame(feedback_rows, columns=["scaleType", "totalScore", "ageMonths", "predictedRisk"])
-        df_feedback = df_feedback.rename(columns={"scaleType": "scale_type", "totalScore": "normalized_score", "ageMonths": "age_months", "predictedRisk": "observation"})
-        
-        # Combine historical synthetic data with real clinical feedback
-        # Real feedback could be oversampled here to weigh heavier, but we append for MVP
-        df_combined = pd.concat([df_synthetic, df_feedback], ignore_index=True)
-    else:
-        df_combined = df_synthetic
-        
-    # Retrain pipeline
-    X = df_combined[["scale_type", "normalized_score", "age_months"]]
-    y = df_combined["observation"]
-    
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ('cat', OneHotEncoder(handle_unknown='ignore'), ['scale_type']),
-            ('num', StandardScaler(), ['normalized_score', 'age_months'])
-        ])
-        
-    clf = Pipeline(steps=[
-        ('preprocessor', preprocessor),
-        ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))
-    ])
-    
-    clf.fit(X, y)
-    
-    # Overwrite the active model
-    joblib.dump(clf, MODEL_PATH)
-    
-    # Hot-swap the model in memory
-    model = clf
-    
+        # Build breakdown
+        total_abs_shap = np.sum(np.abs(instance_shap))
+        if total_abs_shap > 0:
+            for feat_name, shap_val in zip(all_features, instance_shap):
+                # We group the categorical ones into "scale_type"
+                clean_name = "scale_type" if feat_name.startswith("scale_type") else feat_name
+                if clean_name not in shap_breakdown:
+                    shap_breakdown[clean_name] = 0.0
+                shap_breakdown[clean_name] += abs(float(shap_val))
+                
+            # Normalize to percentages
+            for k in shap_breakdown.keys():
+                shap_breakdown[k] = round((shap_breakdown[k] / total_abs_shap) * 100, 2)
+                
+    except Exception as e:
+        print(f"SHAP explanation failed: {e}")
+        # fallback to empty breakdown
+
     return {
-        "status": "success",
-        "message": f"Model retrained successfully using {len(df_synthetic)} synthetic records and {len(feedback_rows)} real-world clinical feedback validations."
+        "risk_level": risk_level,
+        "confidence_score": confidence,
+        "shap_breakdown": shap_breakdown,
+        "trajectory_forecast": generate_trajectory(risk_level),
+        "model_version": "v2.0.0-rf-shap",
     }

@@ -8,99 +8,284 @@ generator client {
   interface = "asyncio"
 }
 
-// SaaS Core: The Clinic/Hospital
+// ---------------------------------------------------------
+// CORE MULTI-TENANT & RBAC
+// ---------------------------------------------------------
 model Tenant {
-  id              String           @id @default(uuid())
-  name            String
-  subscriptionTier String          @default("BASIC")
-  createdAt       DateTime         @default(now())
+  id               String   @id @default(uuid())
+  name             String
+  npiNumber        String?  // National Provider Identifier
+  address          String?
+  contactEmail     String?
+  subscriptionTier String   @default("ENTERPRISE")
+  createdAt        DateTime @default(now())
 
-  users           User[]
-  patients        Patient[]
-  reports         ClinicalReport[]
-  mlFeedbacks     MLFeedback[]
+  users        User[]
+  patients     Patient[]
+  appointments Appointment[]
+  auditLogs    AuditLog[]
+  assessmentSessions AssessmentSession[]
+  assessmentTemplates AssessmentTemplate[]
 }
 
-// SaaS Core: The Medical Staff
+enum Role {
+  SUPER_ADMIN
+  CLINIC_ADMIN
+  DOCTOR
+  PSYCHOLOGIST
+  THERAPIST
+  RECEPTIONIST
+  PATIENT_PARENT
+}
+
 model User {
-  id        String   @id @default(uuid())
-  tenantId  String
-  email     String   @unique
-  role      String   @default("NURSE") // Roles: ADMIN, DOCTOR, NURSE
+  id           String   @id @default(uuid())
+  tenantId     String
+  email        String   @unique
+  role         Role
   passwordHash String
-  
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  reports   ClinicalReport[]
-  mlFeedbacks MLFeedback[]
+  firstName    String     @default("Unknown")
+  lastName     String     @default("Unknown")
+  credentials  String?  // e.g., MD, PhD, MSW
+  isActive     Boolean  @default(true)
+  suspendedAt  DateTime?
+  lastLoginAt  DateTime?
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  auditLogs    AuditLog[]
+  appointments Appointment[] @relation("ProviderAppointments")
+  clinicalNotes ClinicalNote[]
+  createdSessions  AssessmentSession[] @relation("SessionCreator")
+  reviewedSessions AssessmentSession[] @relation("SessionReviewer")
+  approvedSessions AssessmentSession[] @relation("SessionApprover")
+  approvedReports  Report[] @relation("ReportApprover")
 }
 
-// Clinical Core: The Patient
+// ---------------------------------------------------------
+// FULL EMR: PATIENT MODEL
+// ---------------------------------------------------------
 model Patient {
-  id            String   @id @default(uuid())
-  tenantId      String
-  firstName     String
-  lastName      String
-  dateOfBirth   DateTime
-  gender        String
-  parentName    String?
-  contactNumber String?
-  externalId    String?  // For future EHR/EMR integrations
+  id               String   @id @default(uuid())
+  tenantId         String
+  mrn              String   @unique // Medical Record Number
+  firstName        String
+  lastName         String
+  dateOfBirth      DateTime
+  gender           String
+  
+  // Demographics & Contact
+  guardianName     String?
+  guardianEmail    String?
+  guardianPhone    String?
+  emergencyContact String?
+  address          String?
+  insuranceInfo    Json?    // Provider, Group, Member ID
+  referringPhysician String?
 
-  tenant        Tenant   @relation(fields: [tenantId], references: [id])
-  reports       ClinicalReport[]
+  // Clinical History
+  birthHistory         String?
+  developmentalHistory String?
+  medicalHistory       String?
+  allergies            Json?    // Array of allergies
+  medications          Json?    // Current medications
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+  assessments      Assessment[]
+  appointments     Appointment[]
+  clinicalNotes    ClinicalNote[]
+  documents        Document[]
+  treatmentPlans   TreatmentPlan[]
+  consents         Consent[]
+  assessmentSessions AssessmentSession[]
 }
 
-// Clinical Core: The Preliminary Assessment
-model ClinicalReport {
+// ---------------------------------------------------------
+// CLINICAL WORKFLOW
+// ---------------------------------------------------------
+model Appointment {
+  id           String   @id @default(uuid())
+  tenantId     String
+  patientId    String
+  providerId   String
+  scheduledAt  DateTime
+  durationMins Int      @default(60)
+  status       String   @default("SCHEDULED") // COMPLETED, CANCELLED, NO_SHOW
+  type         String   // INTAKE, FOLLOW_UP, THERAPY
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  patient      Patient  @relation(fields: [patientId], references: [id])
+  provider     User     @relation("ProviderAppointments", fields: [providerId], references: [id])
+}
+
+model Assessment {
   id             String   @id @default(uuid())
   tenantId       String
   patientId      String
-  authorId       String
   
-  // Assessment Data
-  scaleType      String
-  itemScores     Json     // Raw behavioral inputs
+  scaleType      String   // CARS, GARS-2, M-CHAT-R
+  itemScores     Json
   totalScore     Float
+  
+  // ML & Explainability Integration
+  predictedRisk  String?
+  confidence     Float?
+  shapValues     Json?    // Feature importance breakdown
+  trajectory     Json?    // 6-month prediction
   
   // Intake Context
   medicalHistory String?
   lifestyleInfo  String?
-  symptoms       Json?    // Array of objects { symptom, duration, severity }
-  doctorNotes    String?
-
-  // SaaS Workflow States
-  status         String   @default("PENDING_REVIEW") 
-  mlRiskMetadata Json?    // ML Decision Support stored cleanly here
+  symptoms       Json?
   
+  status         String   @default("DRAFT") // FINALIZED
   createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
 
-  tenant         Tenant   @relation(fields: [tenantId], references: [id])
   patient        Patient  @relation(fields: [patientId], references: [id])
-  author         User     @relation(fields: [authorId], references: [id])
-  feedback       MLFeedback?
 }
 
-// ML Core: Active Learning Feedback Loop
-model MLFeedback {
-  id               String   @id @default(uuid())
-  clinicalReportId String   @unique
-  tenantId         String
-  authorId         String
+model ClinicalNote {
+  id           String   @id @default(uuid())
+  patientId    String
+  authorId     String
   
-  scaleType        String
-  totalScore       Float
-  ageMonths        Int
+  // SOAP Format
+  subjective   String?
+  objective    String?
+  assessment   String?
+  plan         String?
   
-  predictedRisk    String
-  confidenceScore  Float
-  
-  doctorAgreement  Boolean
-  doctorNotes      String?
-  
-  createdAt        DateTime @default(now())
+  createdAt    DateTime @default(now())
+  isSigned     Boolean  @default(false)
 
-  report           ClinicalReport @relation(fields: [clinicalReportId], references: [id])
-  tenant           Tenant         @relation(fields: [tenantId], references: [id])
-  author           User           @relation(fields: [authorId], references: [id])
+  patient      Patient  @relation(fields: [patientId], references: [id])
+  author       User     @relation(fields: [authorId], references: [id])
+}
+
+model TreatmentPlan {
+  id           String   @id @default(uuid())
+  patientId    String
+  goals        Json     // List of therapeutic goals
+  interventions Json    // CDSS recommended interventions
+  status       String   @default("ACTIVE")
+  createdAt    DateTime @default(now())
+
+  patient      Patient  @relation(fields: [patientId], references: [id])
+}
+
+// ---------------------------------------------------------
+// COMPLIANCE & SECURITY
+// ---------------------------------------------------------
+model AuditLog {
+  id           String   @id @default(uuid())
+  tenantId     String
+  userId       String
+  action       String   // e.g., "VIEW_PATIENT", "EDIT_NOTE"
+  resource     String   // "Patient", "Assessment"
+  resourceId   String
+  timestamp    DateTime @default(now())
+  ipAddress    String?
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+model Consent {
+  id           String   @id @default(uuid())
+  patientId    String
+  documentType String   // HIPAA, TREATMENT_CONSENT
+  signedAt     DateTime @default(now())
+  signatureUrl String?
+  
+  patient      Patient  @relation(fields: [patientId], references: [id])
+}
+
+model Document {
+  id           String   @id @default(uuid())
+  patientId    String
+  fileType     String   // PDF, JPG
+  s3Url        String   // Encrypted storage reference
+  uploadedAt   DateTime @default(now())
+
+  patient      Patient  @relation(fields: [patientId], references: [id])
+}
+
+// ---------------------------------------------------------
+// ASSESSMENT & REPORTING SYSTEM
+// ---------------------------------------------------------
+model AssessmentSession {
+  id                   String   @id @default(uuid())
+  token                String   @unique @default(uuid())
+  tenantId             String
+  patientId            String
+  assessmentTemplateId String
+  status               String   @default("CREATED") // CREATED, SENT, IN_PROGRESS, SUBMITTED, UNDER_REVIEW, APPROVED, ARCHIVED, EXPIRED, CANCELLED
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  expiresAt            DateTime?
+  submittedAt          DateTime?
+  createdBy            String
+  reviewedBy           String?
+  approvedBy           String?
+
+  tenant               Tenant             @relation(fields: [tenantId], references: [id])
+  patient              Patient            @relation(fields: [patientId], references: [id])
+  template             AssessmentTemplate @relation(fields: [assessmentTemplateId], references: [id])
+  creator              User               @relation("SessionCreator", fields: [createdBy], references: [id])
+  reviewer             User?              @relation("SessionReviewer", fields: [reviewedBy], references: [id])
+  approver             User?              @relation("SessionApprover", fields: [approvedBy], references: [id])
+  responses            AssessmentResponse[]
+  reports              Report[]
+}
+
+model AssessmentTemplate {
+  id           String   @id @default(uuid())
+  tenantId     String?  // Null means global template
+  name         String
+  description  String?
+  type         String   // M-CHAT-R, CARS, INTAKE, etc.
+  formSchema   Json     @map("schema")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id])
+  sessions     AssessmentSession[]
+}
+
+model AssessmentResponse {
+  id                  String   @id @default(uuid())
+  assessmentSessionId String
+  fieldName           String
+  value               Json     // Can be string, number, array, etc.
+  metadata            Json?
+
+  session             AssessmentSession @relation(fields: [assessmentSessionId], references: [id])
+}
+
+model Report {
+  id                  String   @id @default(uuid())
+  assessmentSessionId String
+  status              String   @default("DRAFT") // DRAFT, AI_GENERATED, PENDING_REVIEW, APPROVED, ARCHIVED
+  sections            Json?    // Optional JSON representation if structured, otherwise use ReportSection
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  approvedBy          String?
+  approvedAt          DateTime?
+
+  session             AssessmentSession @relation(fields: [assessmentSessionId], references: [id])
+  approver            User?             @relation("ReportApprover", fields: [approvedBy], references: [id])
+  reportSections      ReportSection[]
+}
+
+model ReportSection {
+  id       String @id @default(uuid())
+  reportId String
+  name     String
+  content  String
+  order    Int    @default(0)
+
+  report   Report @relation(fields: [reportId], references: [id])
 }
