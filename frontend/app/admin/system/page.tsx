@@ -9,7 +9,7 @@ export default function SystemHealthPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchApi("/api/v1/super-admin/system/health")
+    fetchApi("/super-admin/system/health")
       .then((data) => {
         setHealth(data);
       })

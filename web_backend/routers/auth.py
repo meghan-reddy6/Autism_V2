@@ -6,6 +6,9 @@ from pydantic import BaseModel
 import secrets
 
 from database import db
+from auth.permissions import has_permission
+from audit.logger import log_audit
+from fastapi import Request
 from dependencies import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
@@ -21,6 +24,10 @@ class TokenResponse(BaseModel):
 class RefreshRequest(BaseModel):
     refresh_token: str
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
 from dependencies import limiter
 
 @router.post("/login", response_model=TokenResponse)
@@ -29,6 +36,7 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
     user = await db.user.find_unique(where={"email": form_data.username})
     
     if not user:
+        await log_audit(action="login_failed", user_id=None, details={"email": form_data.username, "reason": "user_not_found"})
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -92,6 +100,15 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
         "expiresAt": expires_at
     })
     
+    await log_audit(
+        user_id=user.id,
+        tenant_id=user.tenantId,
+        action="LOGIN_SUCCESS",
+        resource_type="User",
+        resource_id=user.id,
+        request=request
+    )
+    
     return {
         "access_token": access_token, 
         "refresh_token": refresh_token,
@@ -153,3 +170,27 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "firstName": current_user.firstName,
         "lastName": current_user.lastName
     }
+
+@router.post("/change-password")
+async def change_password(req: ChangePasswordRequest, current_user = Depends(get_current_user)):
+    user = await db.user.find_unique(where={"id": current_user.id})
+    
+    if not pwd_context.verify(req.current_password, user.passwordHash):
+        raise HTTPException(status_code=400, detail="Incorrect current password")
+        
+    hashed_pw = pwd_context.hash(req.new_password)
+    
+    await db.user.update(
+        where={"id": user.id},
+        data={"passwordHash": hashed_pw}
+    )
+    
+    await log_audit(
+        user_id=user.id,
+        tenant_id=user.tenantId,
+        action="PASSWORD_CHANGED",
+        resource_type="User",
+        resource_id=user.id
+    )
+    
+    return {"message": "Password updated successfully"}

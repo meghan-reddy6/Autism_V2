@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, BrainCircuit, Calendar, FileText, Activity, Stethoscope, User, AlertCircle, FilePlus, Phone, MapPin, CheckCircle2, XCircle, Clock, Play } from "lucide-react";
+import { AlertTriangle, BrainCircuit, Calendar, FileText, Activity, Stethoscope, User, AlertCircle, FilePlus, Phone, MapPin, CheckCircle2, XCircle, Clock, Play, Trash2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState, useRef } from "react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
@@ -385,6 +385,23 @@ export default function AssessmentResult() {
                 >
                   Print
                 </button>
+                {isDoctor && (
+                  <button 
+                    onClick={async () => {
+                      if(confirm("Are you sure you want to delete this clinical report? This action cannot be undone.")) {
+                        try {
+                          await fetchApi(`/assessment-sessions/${session.id}`, { method: 'DELETE' });
+                          window.location.href = '/assessments';
+                        } catch(e) {
+                          alert("Failed to delete report.");
+                        }
+                      }
+                    }}
+                    className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors flex items-center"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" /> Delete
+                  </button>
+                )}
               </div>
             </div>
           </div>

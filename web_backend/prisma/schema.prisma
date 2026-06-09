@@ -18,6 +18,11 @@ model Tenant {
   address          String?
   contactEmail     String?
   subscriptionTier String   @default("ENTERPRISE")
+  status           String   @default("ACTIVE") // ACTIVE, SUSPENDED, ARCHIVED
+  maxUsers         Int      @default(500)
+  maxStorageGB     Int      @default(100)
+  maxAssessments   Int      @default(100000)
+  featureFlags     Json?    // e.g., ["analytics", "audit_logs", "ai_reports"]
   createdAt        DateTime @default(now())
   
   deletedAt        DateTime?

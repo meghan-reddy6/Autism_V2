@@ -5,7 +5,9 @@ from typing import List, Optional, Any
 from datetime import datetime
 
 from database import db
-from dependencies import get_current_user, require_roles
+from auth.authorization import require_permission
+from audit.logger import log_audit
+from fastapi import Request
 
 router = APIRouter(prefix="/api/v1/patients", tags=["patients"])
 
@@ -28,7 +30,8 @@ def generate_mrn() -> str:
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_patient(
     patient: PatientCreate, 
-    current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "RECEPTIONIST"]))
+    request: Request,
+    current_user: Any = Depends(require_permission("create_patient"))
 ):
     # Generate unique MRN
     new_mrn = generate_mrn()
@@ -49,19 +52,20 @@ async def create_patient(
     })
     
     # Audit log
-    await db.auditlog.create(data={
-        "tenantId": current_user.tenantId,
-        "userId": current_user.id,
-        "action": "CREATE_PATIENT",
-        "resource": "Patient",
-        "resourceId": new_patient.id
-    })
+    await log_audit(
+        user_id=current_user.id,
+        tenant_id=current_user.tenantId,
+        action="CREATE_PATIENT",
+        resource_type="Patient",
+        resource_id=new_patient.id,
+        request=request
+    )
     
     return new_patient
 
 @router.get("")
 async def list_patients(
-    current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "THERAPIST", "RECEPTIONIST"]))
+    current_user: Any = Depends(require_permission("view_patient"))
 ):
     patients = await db.patient.find_many(
         where={"tenantId": current_user.tenantId},
@@ -72,7 +76,8 @@ async def list_patients(
 @router.get("/{patient_id}")
 async def get_patient(
     patient_id: str,
-    current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "THERAPIST", "RECEPTIONIST"]))
+    request: Request,
+    current_user: Any = Depends(require_permission("view_patient"))
 ):
     patient = await db.patient.find_first(
         where={
@@ -92,13 +97,14 @@ async def get_patient(
         raise HTTPException(status_code=404, detail="Patient not found")
         
     # Audit log for viewing a patient chart
-    await db.auditlog.create(data={
-        "tenantId": current_user.tenantId,
-        "userId": current_user.id,
-        "action": "VIEW_PATIENT_CHART",
-        "resource": "Patient",
-        "resourceId": patient.id
-    })
+    await log_audit(
+        user_id=current_user.id,
+        tenant_id=current_user.tenantId,
+        action="VIEW_PATIENT_CHART",
+        resource_type="Patient",
+        resource_id=patient.id,
+        request=request
+    )
     
     # Calculate summary info
     patient_dict = patient.model_dump() if hasattr(patient, "model_dump") else patient
@@ -111,7 +117,7 @@ async def get_patient(
 @router.get("/{patient_id}/assessments")
 async def get_patient_assessments(
     patient_id: str,
-    current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "THERAPIST", "RECEPTIONIST"]))
+    current_user: Any = Depends(require_permission("view_patient"))
 ):
     patient = await db.patient.find_first(
         where={"id": patient_id, "tenantId": current_user.tenantId}

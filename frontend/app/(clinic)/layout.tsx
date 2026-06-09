@@ -58,9 +58,11 @@ export default function ClinicLayout({
             <div className="hidden md:block"></div>
             
             <div className="flex items-center space-x-3">
-              <span className="text-sm font-medium text-slate-600">Dr. Admin</span>
+              <span className="text-sm font-medium text-slate-600">
+                {user ? `${user.firstName} ${user.lastName}` : "Loading..."}
+              </span>
               <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
-                DR
+                {user ? `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() : "??"}
               </div>
             </div>
           </header>

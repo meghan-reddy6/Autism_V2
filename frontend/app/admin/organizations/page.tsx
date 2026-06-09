@@ -3,11 +3,16 @@
 import { useEffect, useState } from "react";
 import { fetchApi } from "@/lib/api-client";
 import { Building2, Plus, Users, Search, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function OrganizationsPage() {
   const [orgs, setOrgs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newOrg, setNewOrg] = useState({ name: "", subscriptionTier: "Enterprise", maxUsers: 500, maxStorageGB: 100 });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     async function loadOrgs() {
@@ -22,6 +27,24 @@ export default function OrganizationsPage() {
     }
     loadOrgs();
   }, []);
+
+  const handleCreateOrg = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const created = await fetchApi("/admin/organizations", {
+        method: "POST",
+        body: JSON.stringify(newOrg)
+      });
+      setOrgs([{ ...created, _count: { users: 0, patients: 0 } }, ...orgs]);
+      setIsModalOpen(false);
+      setNewOrg({ name: "", subscriptionTier: "Enterprise", maxUsers: 500, maxStorageGB: 100 });
+    } catch (err: any) {
+      alert(err.message || "Failed to create organization");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -38,11 +61,49 @@ export default function OrganizationsPage() {
           <h1 className="text-3xl font-bold text-white tracking-tight">Organizations</h1>
           <p className="text-slate-400 mt-2">Manage clinic tenants across the CDSS platform.</p>
         </div>
-        <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm font-medium">
+        <button onClick={() => setIsModalOpen(true)} className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm font-medium">
           <Plus className="w-4 h-4 mr-2" />
           Provision Tenant
         </button>
       </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl w-full max-w-md shadow-2xl">
+            <h2 className="text-xl font-bold text-white mb-4">Provision New Tenant</h2>
+            <form onSubmit={handleCreateOrg} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">Organization Name</label>
+                <input required type="text" value={newOrg.name} onChange={e => setNewOrg({...newOrg, name: e.target.value})} className="w-full bg-slate-950 border border-slate-700 rounded-md px-3 py-2 text-white focus:border-blue-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">Subscription Tier</label>
+                <select value={newOrg.subscriptionTier} onChange={e => setNewOrg({...newOrg, subscriptionTier: e.target.value})} className="w-full bg-slate-950 border border-slate-700 rounded-md px-3 py-2 text-white focus:border-blue-500 outline-none">
+                  <option>Enterprise</option>
+                  <option>Professional</option>
+                  <option>Basic</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1">Max Users</label>
+                  <input required type="number" value={newOrg.maxUsers} onChange={e => setNewOrg({...newOrg, maxUsers: parseInt(e.target.value)})} className="w-full bg-slate-950 border border-slate-700 rounded-md px-3 py-2 text-white focus:border-blue-500 outline-none" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1">Storage (GB)</label>
+                  <input required type="number" value={newOrg.maxStorageGB} onChange={e => setNewOrg({...newOrg, maxStorageGB: parseInt(e.target.value)})} className="w-full bg-slate-950 border border-slate-700 rounded-md px-3 py-2 text-white focus:border-blue-500 outline-none" />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
+                <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+                  {isSubmitting ? "Creating..." : "Create Tenant"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
         <div className="p-4 border-b border-slate-800 flex items-center bg-slate-900/50">
@@ -62,6 +123,7 @@ export default function OrganizationsPage() {
               <tr>
                 <th className="py-4 px-6 font-semibold text-slate-400 tracking-wider uppercase text-xs">Organization Name</th>
                 <th className="py-4 px-6 font-semibold text-slate-400 tracking-wider uppercase text-xs">Subscription</th>
+                <th className="py-4 px-6 font-semibold text-slate-400 tracking-wider uppercase text-xs text-center">Status</th>
                 <th className="py-4 px-6 font-semibold text-slate-400 tracking-wider uppercase text-xs text-center">Users</th>
                 <th className="py-4 px-6 font-semibold text-slate-400 tracking-wider uppercase text-xs text-center">Patients</th>
                 <th className="py-4 px-6 font-semibold text-slate-400 tracking-wider uppercase text-xs">Created</th>
@@ -69,7 +131,11 @@ export default function OrganizationsPage() {
             </thead>
             <tbody className="divide-y divide-slate-800/50">
               {orgs.map((org) => (
-                <tr key={org.id} className="hover:bg-slate-900/50 transition-colors">
+                <tr 
+                  key={org.id} 
+                  onClick={() => router.push(`/admin/organizations/${org.id}`)}
+                  className="hover:bg-slate-900/50 transition-colors cursor-pointer"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="h-10 w-10 flex-shrink-0 bg-blue-900/30 rounded-lg flex items-center justify-center border border-blue-800/30">
@@ -84,6 +150,11 @@ export default function OrganizationsPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-emerald-900/30 text-emerald-400 border border-emerald-800/30">
                       {org.subscriptionTier}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <span className={`px-2 py-1 inline-flex text-xs font-semibold rounded bg-slate-800 border ${org.status === 'ACTIVE' ? 'text-green-400 border-green-900/50' : 'text-rose-400 border-rose-900/50'}`}>
+                      {org.status || 'ACTIVE'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">

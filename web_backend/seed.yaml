@@ -1,0 +1,50 @@
+system:
+  super_admin:
+    email: superadmin@system.com
+    password: Admin@123
+    firstName: System
+    lastName: Administrator
+
+subscriptions:
+  - name: Enterprise
+    max_users: 500
+    max_storage_gb: 100
+    max_assessments: 100000
+    features:
+      - analytics
+      - audit_logs
+      - ai_reports
+  - name: Professional
+    max_users: 50
+    max_storage_gb: 20
+    max_assessments: 10000
+    features:
+      - audit_logs
+
+environments:
+  development:
+    tenants:
+      - name: Horizon Health Clinic
+        tier: Enterprise
+        status: ACTIVE
+        users:
+          - email: doctor@clinic.com
+            password: Admin@123
+            firstName: Gregory
+            lastName: House
+            role: CLINICAL_ADMIN
+          - email: provider@clinic.com
+            password: Admin@123
+            firstName: Allison
+            lastName: Cameron
+            role: THERAPIST
+          - email: parent@portal.com
+            password: Admin@123
+            firstName: Sarah
+            lastName: Williams
+            role: VIEWER
+
+assessment_templates:
+  - M-CHAT-R
+  - CARS
+  - GARS-2

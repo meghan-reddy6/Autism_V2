@@ -7,7 +7,9 @@ from prisma import Json
 from datetime import datetime, timezone
 
 from database import db
-from dependencies import get_current_user, require_roles
+from auth.authorization import require_permission
+from audit.logger import log_audit
+from fastapi import Request
 
 router = APIRouter(prefix="/api/v1/reports", tags=["reports"])
 
@@ -15,7 +17,7 @@ ML_SERVICE_URL = os.getenv("ML_SERVICE_URL", "http://ml-service:8001/analyze")
 
 @router.get("")
 async def list_reports(
-    current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "PSYCHOLOGIST", "THERAPIST"]))
+    current_user: Any = Depends(require_permission("view_assessment_session"))
 ):
     # Need to filter by tenantId, which means we join AssessmentSession
     reports = await db.report.find_many(
@@ -41,7 +43,8 @@ async def list_reports(
 @router.post("/generate/{assessmentSessionId}")
 async def generate_report(
     assessmentSessionId: str,
-    current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "PSYCHOLOGIST", "THERAPIST"]))
+    request: Request,
+    current_user: Any = Depends(require_permission("create_clinical_note"))
 ):
     session = await db.assessmentsession.find_unique(
         where={"id": assessmentSessionId},
@@ -114,20 +117,21 @@ async def generate_report(
     )
     
     # Audit log
-    await db.auditlog.create(data={
-        "tenantId": current_user.tenantId,
-        "userId": current_user.id,
-        "action": "GENERATE_REPORT",
-        "resource": "Report",
-        "resourceId": report.id
-    })
+    await log_audit(
+        user_id=current_user.id,
+        tenant_id=current_user.tenantId,
+        action="GENERATE_REPORT",
+        resource_type="Report",
+        resource_id=report.id,
+        request=request
+    )
     
     return report
 
 @router.get("/{reportId}")
 async def get_report(
     reportId: str,
-    current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "PSYCHOLOGIST", "THERAPIST"]))
+    current_user: Any = Depends(require_permission("view_assessment_session"))
 ):
     report = await db.report.find_unique(
         where={"id": reportId},
@@ -157,7 +161,8 @@ class SectionUpdate(BaseModel):
 async def add_report_section(
     reportId: str,
     section: SectionUpdate,
-    current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "PSYCHOLOGIST", "THERAPIST"]))
+    request: Request,
+    current_user: Any = Depends(require_permission("create_clinical_note"))
 ):
     report = await db.report.find_unique(
         where={"id": reportId},
@@ -181,7 +186,8 @@ async def add_report_section(
 @router.patch("/{reportId}/approve")
 async def approve_report(
     reportId: str,
-    current_user: Any = Depends(require_roles(["SUPER_ADMIN", "DOCTOR", "PSYCHOLOGIST"]))
+    request: Request,
+    current_user: Any = Depends(require_permission("approve_report"))
 ):
     report = await db.report.find_unique(
         where={"id": reportId},
@@ -208,20 +214,21 @@ async def approve_report(
         }
     )
     
-    await db.auditlog.create(data={
-        "tenantId": current_user.tenantId,
-        "userId": current_user.id,
-        "action": "APPROVE_REPORT",
-        "resource": "Report",
-        "resourceId": report.id
-    })
+    await log_audit(
+        user_id=current_user.id,
+        tenant_id=current_user.tenantId,
+        action="APPROVE_REPORT",
+        resource_type="Report",
+        resource_id=report.id,
+        request=request
+    )
     
     return updated_report
 
 @router.get("/{reportId}/export/pdf")
 async def export_report_pdf(
     reportId: str,
-    current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "PSYCHOLOGIST", "THERAPIST"]))
+    current_user: Any = Depends(require_permission("view_assessment_session"))
 ):
     report = await db.report.find_unique(
         where={"id": reportId},

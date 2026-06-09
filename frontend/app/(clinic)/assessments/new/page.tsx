@@ -23,6 +23,7 @@ const assessmentSchema = z.object({
   dateOfBirth: z.string().min(1, "Date of birth is required"),
   gender: z.enum(["Male", "Female", "Other", "Prefer not to say"], { required_error: "Please select a gender" }),
   parentName: z.string().optional(),
+  parentEmail: z.string().email("Invalid email").optional().or(z.literal('')),
   contactNumber: z.string().optional(),
 });
 
@@ -75,6 +76,7 @@ export default function NewAssessmentSession() {
           dateOfBirth: new Date(data.dateOfBirth).toISOString(),
           gender: data.gender,
           guardianName: data.parentName,
+          guardianEmail: data.parentEmail || undefined,
           guardianPhone: data.contactNumber,
         }),
       });
@@ -114,7 +116,7 @@ export default function NewAssessmentSession() {
           </div>
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Session Created Successfully</h2>
           <p className="text-slate-500 mb-8">
-            The assessment session has been generated. You can now fill out the assessment right away or send the secure link to the patient's parent.
+            The assessment session has been generated. If you provided an email address, the secure link was automatically dispatched to the parent.
           </p>
           
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-8 flex items-center justify-between">
@@ -194,6 +196,11 @@ export default function NewAssessmentSession() {
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700">Parent / Guardian Name (Optional)</label>
                   <input type="text" {...register("parentName")} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700">Parent Email (Optional - For Auto-Dispatch)</label>
+                  <input type="email" placeholder="parent@example.com" {...register("parentEmail")} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+                  {errors.parentEmail && <p className="text-red-500 text-xs">{errors.parentEmail.message}</p>}
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700">Contact Number (Optional)</label>
