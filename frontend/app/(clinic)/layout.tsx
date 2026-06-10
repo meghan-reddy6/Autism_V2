@@ -33,7 +33,7 @@ export default function ClinicLayout({
             <div className="pt-8 pb-2">
               <p className="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">System</p>
             </div>
-            <NavItem href="/settings" icon={<Settings />} label="ML Configuration" />
+            <NavItem href="/settings" icon={<Settings />} label="Settings" />
 
             {user?.role === "SUPER_ADMIN" && (
               <>

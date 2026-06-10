@@ -44,6 +44,10 @@ export default function AdminLayout({
               <Trash2 className="w-5 h-5 mr-3 text-slate-400" />
               Recycle Bin
             </Link>
+            <Link href="/admin/settings" className="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+              <Settings className="w-5 h-5 mr-3 text-slate-400" />
+              Settings
+            </Link>
           </nav>
           
           <div className="p-4 border-t border-slate-800">
