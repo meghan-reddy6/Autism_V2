@@ -12,11 +12,12 @@ class DashboardService:
         # Compute Stats (The decorator handles checking Cache + DB + Set)
         total_patients = await db.patient.count(where={"tenantId": tenant_id})
         
-        pending_assessments = await db.assessment.count(where={
+        pending_assessments = await db.assessmentsession.count(where={
             "tenantId": tenant_id,
-            "status": "DRAFT"
+            "status": {"in": ["SUBMITTED", "UNDER_REVIEW"]}
         })
         
+        # We'll use Reports for high risk alerts, or fallback to 0 if not implemented yet
         high_risk_alerts = await db.assessment.count(where={
             "tenantId": tenant_id,
             "predictedRisk": "High"
@@ -28,22 +29,22 @@ class DashboardService:
             "scheduledAt": {"gte": week_ago}
         })
         
-        recent_assessments = await db.assessment.find_many(
+        recent_sessions = await db.assessmentsession.find_many(
             where={"tenantId": tenant_id},
-            include={"patient": True},
+            include={"patient": True, "template": True},
             order={"createdAt": "desc"},
             take=5
         )
         
         recent_activity = []
-        for a in recent_assessments:
+        for s in recent_sessions:
             recent_activity.append({
-                "id": a.id,
-                "type": "Assessment",
-                "patient": f"{a.patient.firstName} {a.patient.lastName[0]}. ({a.patient.mrn})",
-                "action": f"{a.scaleType} Assessment completed",
-                "risk": a.predictedRisk,
-                "time": a.createdAt.strftime("%Y-%m-%d %H:%M")
+                "id": s.id,
+                "type": "Assessment Session",
+                "patient": f"{s.patient.firstName} {s.patient.lastName[0]}. ({s.patient.mrn})",
+                "action": f"{s.template.name if s.template else 'Assessment'} - {s.status}",
+                "risk": "N/A", # Wait for report to determine risk
+                "time": s.createdAt.strftime("%Y-%m-%d %H:%M")
             })
             
         stats = {

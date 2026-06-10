@@ -63,6 +63,9 @@ async def submit_responses(token: str, data: dict, session = Depends(validate_as
     except Exception as e:
         import logging
         logging.getLogger(__name__).error(f"Failed to write public audit log: {e}")
+        
+    from services.cache_service import cache_service
+    await cache_service.invalidate_tags(session.tenantId, ["dashboard", "assessmentsession"])
     
     return {"message": "Responses submitted successfully"}
 
@@ -91,5 +94,8 @@ async def save_draft(token: str, data: dict, session = Depends(validate_assessme
         except Exception as e:
             import logging
             logging.getLogger(__name__).error(f"Failed to write public draft audit log: {e}")
+            
+        from services.cache_service import cache_service
+        await cache_service.invalidate_tags(session.tenantId, ["dashboard", "assessmentsession"])
         
     return {"message": "Draft saved"}
