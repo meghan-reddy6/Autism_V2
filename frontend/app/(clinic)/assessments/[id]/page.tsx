@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, BrainCircuit, Calendar, FileText, Activity, Stethoscope, User, AlertCircle, FilePlus, Phone, MapPin, CheckCircle2, XCircle, Clock, Play, Trash2 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState, useRef } from "react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
@@ -227,6 +227,7 @@ const SCALES = {
 
 export default function AssessmentResult() {
   const params = useParams();
+  const router = useRouter();
   const sessionId = params.id as string;
   
   const [session, setSession] = useState<any>(null);
@@ -391,7 +392,7 @@ export default function AssessmentResult() {
                       if(confirm("Are you sure you want to delete this clinical report? This action cannot be undone.")) {
                         try {
                           await fetchApi(`/assessment-sessions/${session.id}`, { method: 'DELETE' });
-                          window.location.href = '/assessments';
+                          router.push('/assessments');
                         } catch(e) {
                           alert("Failed to delete report.");
                         }
