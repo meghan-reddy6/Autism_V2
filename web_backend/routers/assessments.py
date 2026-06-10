@@ -7,6 +7,7 @@ from prisma import Json
 
 from database import db
 from dependencies import get_current_user, require_roles
+from repositories import assessment_repo, patient_repo
 
 router = APIRouter(prefix="/api/v1/assessments", tags=["assessments"])
 
@@ -24,10 +25,8 @@ class AssessmentPayload(BaseModel):
 async def list_assessments(
     current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "PSYCHOLOGIST", "THERAPIST"]))
 ):
-    assessments = await db.assessment.find_many(
-        where={
-            "tenantId": current_user.tenantId
-        },
+    assessments = await assessment_repo.find_many(
+        tenant_id=current_user.tenantId,
         include={
             "patient": True
         },
@@ -42,11 +41,9 @@ async def get_assessment(
     assessment_id: str,
     current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "PSYCHOLOGIST", "THERAPIST"]))
 ):
-    assessment = await db.assessment.find_first(
-        where={
-            "id": assessment_id,
-            "tenantId": current_user.tenantId
-        },
+    assessment = await assessment_repo.get_by_id(
+        tenant_id=current_user.tenantId,
+        id=assessment_id,
         include={
             "patient": True
         }
@@ -60,11 +57,9 @@ async def score_assessment(
     payload: AssessmentPayload,
     current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "PSYCHOLOGIST", "THERAPIST"]))
 ):
-    patient = await db.patient.find_first(
-        where={
-            "id": payload.patientId,
-            "tenantId": current_user.tenantId
-        }
+    patient = await patient_repo.get_by_id(
+        tenant_id=current_user.tenantId,
+        id=payload.patientId
     )
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
@@ -91,30 +86,34 @@ async def score_assessment(
     except Exception as e:
         print(f"ML Warning: {e}")
 
-    assessment = await db.assessment.create(data={
-        "tenantId": current_user.tenantId,
-        "patientId": patient.id,
-        "scaleType": payload.scaleType,
-        "itemScores": Json(payload.itemScores),
-        "totalScore": total_score,
-        "predictedRisk": ml_metadata.get("risk_level"),
-        "confidence": ml_metadata.get("confidence_score"),
-        "shapValues": Json(ml_metadata.get("shap_breakdown", {})),
-        "trajectory": Json(ml_metadata.get("trajectory_forecast", [])),
-        "medicalHistory": payload.medicalHistory,
-        "lifestyleInfo": payload.lifestyleInfo,
-        "symptoms": Json(payload.symptoms) if payload.symptoms else None,
-        "status": "FINALIZED"
-    })
+    assessment = await assessment_repo.create(
+        tenant_id=current_user.tenantId,
+        data={
+            "patientId": patient.id,
+            "scaleType": payload.scaleType,
+            "itemScores": Json(payload.itemScores),
+            "totalScore": total_score,
+            "predictedRisk": ml_metadata.get("risk_level"),
+            "confidence": ml_metadata.get("confidence_score"),
+            "shapValues": Json(ml_metadata.get("shap_breakdown", {})),
+            "trajectory": Json(ml_metadata.get("trajectory_forecast", [])),
+            "medicalHistory": payload.medicalHistory,
+            "lifestyleInfo": payload.lifestyleInfo,
+            "symptoms": Json(payload.symptoms) if payload.symptoms else None,
+            "status": "FINALIZED"
+        }
+    )
     
     # Audit log
-    await db.auditlog.create(data={
-        "tenantId": current_user.tenantId,
-        "userId": current_user.id,
-        "action": "CREATE_ASSESSMENT",
-        "resource": "Assessment",
-        "resourceId": assessment.id
-    })
+    from audit.logger import log_audit
+    from fastapi import Request
+    await log_audit(
+        user_id=current_user.id,
+        tenant_id=current_user.tenantId,
+        action="CREATE_ASSESSMENT",
+        resource_type="Assessment",
+        resource_id=assessment.id
+    )
     
     return assessment
 
@@ -123,11 +122,9 @@ async def get_cdss_recommendations(
     assessment_id: str,
     current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "PSYCHOLOGIST", "THERAPIST"]))
 ):
-    assessment = await db.assessment.find_first(
-        where={
-            "id": assessment_id,
-            "tenantId": current_user.tenantId
-        }
+    assessment = await assessment_repo.get_by_id(
+        tenant_id=current_user.tenantId,
+        id=assessment_id
     )
     if not assessment:
         raise HTTPException(status_code=404, detail="Assessment not found")
@@ -161,13 +158,14 @@ async def get_cdss_recommendations(
         })
         
     # Audit log
-    await db.auditlog.create(data={
-        "tenantId": current_user.tenantId,
-        "userId": current_user.id,
-        "action": "VIEW_CDSS_RECOMMENDATIONS",
-        "resource": "Assessment",
-        "resourceId": assessment.id
-    })
+    from audit.logger import log_audit
+    await log_audit(
+        user_id=current_user.id,
+        tenant_id=current_user.tenantId,
+        action="VIEW_CDSS_RECOMMENDATIONS",
+        resource_type="Assessment",
+        resource_id=assessment.id
+    )
         
     return {"assessmentId": assessment.id, "recommendations": recommendations}
 
@@ -181,27 +179,27 @@ async def submit_feedback(
     payload: FeedbackPayload,
     current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "PSYCHOLOGIST", "THERAPIST"]))
 ):
-    assessment = await db.assessment.find_first(
-        where={
-            "id": assessment_id,
-            "tenantId": current_user.tenantId
-        }
+    assessment = await assessment_repo.get_by_id(
+        tenant_id=current_user.tenantId,
+        id=assessment_id
     )
     if not assessment:
         raise HTTPException(status_code=404, detail="Assessment not found")
         
-    updated_assessment = await db.assessment.update(
+    updated_assessment = await assessment_repo.update(
+        tenant_id=current_user.tenantId,
         where={"id": assessment_id},
         data={"status": "REVIEWED"}
     )
     
-    await db.auditlog.create(data={
-        "tenantId": current_user.tenantId,
-        "userId": current_user.id,
-        "action": "SUBMIT_ML_FEEDBACK",
-        "resource": "Assessment",
-        "resourceId": assessment.id,
-        "details": f"Agreement: {payload.doctor_agreement}, Notes: {payload.doctor_notes}"
-    })
+    from audit.logger import log_audit
+    await log_audit(
+        user_id=current_user.id,
+        tenant_id=current_user.tenantId,
+        action="SUBMIT_ML_FEEDBACK",
+        resource_type="Assessment",
+        resource_id=assessment.id,
+        details=f"Agreement: {payload.doctor_agreement}, Notes: {payload.doctor_notes}"
+    )
     
     return updated_assessment

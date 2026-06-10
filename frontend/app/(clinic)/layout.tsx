@@ -3,6 +3,7 @@ import React from "react"
 import Link from "next/link"
 import { Activity, Users, Settings, FileText, Calendar, LogOut } from "lucide-react"
 import AuthGuard from "@/components/AuthGuard"
+import { ClinicalGuard } from "@/components/ClinicalGuard"
 import LogoutButton from "@/components/LogoutButton"
 import { useAuthStore } from "@/lib/store"
 
@@ -16,8 +17,9 @@ export default function ClinicLayout({
 
   return (
     <AuthGuard>
-      <div className="flex h-screen w-full overflow-hidden bg-slate-50 print:h-auto print:block print:overflow-visible">
-        {/* Sidebar */}
+      <ClinicalGuard>
+        <div className="flex h-screen w-full overflow-hidden bg-slate-50 print:h-auto print:block print:overflow-visible">
+          {/* Sidebar */}
         <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 hidden md:flex print:hidden">
           <div className="h-16 flex items-center px-6 border-b border-slate-100 shrink-0">
             <Activity className="h-6 w-6 text-blue-600 mr-3" />
@@ -75,6 +77,7 @@ export default function ClinicLayout({
           </main>
         </div>
       </div>
+      </ClinicalGuard>
     </AuthGuard>
   )
 }

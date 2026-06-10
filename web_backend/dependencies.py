@@ -144,8 +144,8 @@ def require_roles(minimum_role_or_roles):
 
 
 async def validate_assessment_token(token: str):
-    from repositories import assessment_repo
-    session = await assessment_repo.find_unique(
+    from database import db
+    session = await db.assessmentsession.find_unique(
         where={"token": token},
         include={"template": True, "patient": True}
     )

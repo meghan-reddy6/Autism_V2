@@ -72,6 +72,20 @@ async def create_organization(org: OrganizationCreate):
             "status": "ACTIVE"
         }
     )
+    
+    from core.context import get_user_id, get_tenant_id
+    import json
+    await db.auditlog.create(
+        data={
+            "tenantId": get_tenant_id() or tenant.id,
+            "userId": get_user_id() or "SYSTEM",
+            "action": "CREATE_TENANT",
+            "resource": "tenant",
+            "resourceId": tenant.id,
+            "changes": json.dumps({"name": org.name, "tier": org.subscriptionTier})
+        }
+    )
+    
     return tenant
 
 @router.patch("/organizations/{org_id}")
@@ -81,6 +95,20 @@ async def update_organization(org_id: str, org: OrganizationUpdate):
         where={"id": org_id},
         data=data_to_update
     )
+    
+    from core.context import get_user_id, get_tenant_id
+    import json
+    await db.auditlog.create(
+        data={
+            "tenantId": get_tenant_id() or org_id,
+            "userId": get_user_id() or "SYSTEM",
+            "action": "UPDATE_TENANT",
+            "resource": "tenant",
+            "resourceId": org_id,
+            "changes": json.dumps(data_to_update)
+        }
+    )
+    
     return updated
 
 @router.get("/organizations/{org_id}")
@@ -135,6 +163,20 @@ async def create_user(user: UserCreate):
             "tenantId": user.tenantId
         }
     )
+    
+    from core.context import get_user_id, get_tenant_id
+    import json
+    await db.auditlog.create(
+        data={
+            "tenantId": get_tenant_id() or user.tenantId,
+            "userId": get_user_id() or "SYSTEM",
+            "action": "CREATE_USER",
+            "resource": "user",
+            "resourceId": new_user.id,
+            "changes": json.dumps({"email": user.email, "role": user.role, "tenantId": user.tenantId})
+        }
+    )
+    
     return new_user
 
 @router.patch("/users/{user_id}")
@@ -144,6 +186,20 @@ async def update_user(user_id: str, user: UserUpdate):
         where={"id": user_id},
         data=data_to_update
     )
+    
+    from core.context import get_user_id, get_tenant_id
+    import json
+    await db.auditlog.create(
+        data={
+            "tenantId": get_tenant_id() or updated.tenantId,
+            "userId": get_user_id() or "SYSTEM",
+            "action": "UPDATE_USER",
+            "resource": "user",
+            "resourceId": user_id,
+            "changes": json.dumps(data_to_update)
+        }
+    )
+    
     return updated
 
 @router.delete("/users/{user_id}")

@@ -7,6 +7,7 @@ from prisma import Json
 
 from database import db
 from dependencies import get_current_user, require_roles
+from repositories import assessment_session_repo
 
 router = APIRouter(prefix="/api/v1/assessment-inbox", tags=["assessment-inbox"])
 
@@ -15,9 +16,7 @@ async def list_assessment_inbox(
     status: Optional[str] = None,
     current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "PSYCHOLOGIST", "THERAPIST"]))
 ):
-    where_clause = {
-        "tenantId": current_user.tenantId
-    }
+    where_clause = {}
     if status:
         # e.g., ?status=CREATED,SENT,IN_PROGRESS,SUBMITTED,UNDER_REVIEW,APPROVED,ARCHIVED,EXPIRED
         statuses = status.split(",")
@@ -26,7 +25,8 @@ async def list_assessment_inbox(
         else:
             where_clause["status"] = {"in": statuses}
 
-    sessions = await db.assessmentsession.find_many(
+    sessions = await assessment_session_repo.find_many(
+        tenant_id=current_user.tenantId,
         where=where_clause,
         include={
             "patient": True,
@@ -42,10 +42,8 @@ async def list_assessment_inbox(
 async def get_assessment_inbox_stats(
     current_user: Any = Depends(require_roles(["SUPER_ADMIN", "CLINIC_ADMIN", "DOCTOR", "PSYCHOLOGIST", "THERAPIST"]))
 ):
-    sessions = await db.assessmentsession.find_many(
-        where={
-            "tenantId": current_user.tenantId
-        }
+    sessions = await assessment_session_repo.find_many(
+        tenant_id=current_user.tenantId
     )
     
     stats = {

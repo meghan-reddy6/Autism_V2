@@ -19,7 +19,7 @@ async def list_deleted_patients(current_user: Any = Depends(get_current_user)):
     if current_user.role not in ["SUPER_ADMIN", "PLATFORM_ADMIN"]:
         where["tenantId"] = current_user.tenantId
         
-    patients = await patient_repo.find_many(where=where, include_deleted=True)
+    patients = await patient_repo.find_many(tenant_id=current_user.tenantId, where=where, include_deleted=True)
     return {"deleted_patients": patients}
 
 @router.post("/patients/{patient_id}/restore")
@@ -28,15 +28,15 @@ async def restore_patient(patient_id: str, current_user: Any = Depends(get_curre
     if current_user.role not in ["SUPER_ADMIN", "PLATFORM_ADMIN"]:
         where["tenantId"] = current_user.tenantId
         
-    patient = await patient_repo.find_first(where=where, include_deleted=True)
+    patient = await patient_repo.find_first(tenant_id=current_user.tenantId, where=where, include_deleted=True)
     if not patient:
         raise HTTPException(status_code=404, detail="Deleted patient not found")
         
-    await patient_repo.restore({"id": patient_id})
+    await patient_repo.restore(tenant_id=current_user.tenantId, where={"id": patient_id})
     return {"message": "Patient restored successfully"}
 
 @router.delete("/patients/{patient_id}/purge", dependencies=[Depends(require_roles("SUPER_ADMIN"))])
-async def purge_patient(patient_id: str):
+async def purge_patient(patient_id: str, current_user: Any = Depends(get_current_user)):
     """Hard delete a patient - SUPER ADMIN ONLY"""
-    await patient_repo.hard_delete({"id": patient_id})
+    await patient_repo.hard_delete(tenant_id=current_user.tenantId, where={"id": patient_id})
     return {"message": "Patient permanently purged from system"}

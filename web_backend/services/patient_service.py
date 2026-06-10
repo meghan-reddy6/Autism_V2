@@ -27,10 +27,12 @@ class PatientService:
             new_mrn = self._generate_mrn()
             data["mrn"] = new_mrn
             try:
-                # Assuming patient_repo.create handles standard creation.
                 # Use explicit transaction boundary to ensure atomicity and rollback on fail
                 async with db.tx() as transaction:
-                    result = await self.patient_repo.create(data=data, tx=transaction)
+                    tenant_id = get_tenant_id()
+                    if not tenant_id:
+                        raise ValueError("Tenant context missing")
+                    result = await self.patient_repo.create(tenant_id=tenant_id, data=data, tx=transaction)
                     
                     # Publish durable domain event for patient creation
                     tenant_id = get_tenant_id()
@@ -50,12 +52,16 @@ class PatientService:
                 continue
 
     async def list_patients(self) -> List[Any]:
+        tenant_id = get_tenant_id()
         return await self.patient_repo.find_many(
+            tenant_id=tenant_id,
             order={"createdAt": "desc"}
         )
 
     async def get_patient_with_summary(self, patient_id: str) -> Optional[Dict[str, Any]]:
+        tenant_id = get_tenant_id()
         patient = await self.patient_repo.find_first(
+            tenant_id=tenant_id,
             where={"id": patient_id},
             include={
                 "assessmentSessions": {
@@ -74,11 +80,13 @@ class PatientService:
         return patient
         
     async def get_patient_assessments(self, patient_id: str) -> Optional[List[Any]]:
-        patient = await self.patient_repo.find_first(where={"id": patient_id})
+        tenant_id = get_tenant_id()
+        patient = await self.patient_repo.find_first(tenant_id=tenant_id, where={"id": patient_id})
         if not patient:
             return None
             
         sessions = await self.assessment_repo.find_many(
+            tenant_id=tenant_id,
             where={"patientId": patient_id},
             include={
                 "template": True,

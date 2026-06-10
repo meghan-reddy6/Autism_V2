@@ -36,7 +36,8 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
     user = await db.user.find_unique(where={"email": form_data.username})
     
     if not user:
-        await log_audit(action="login_failed", user_id=None, details={"email": form_data.username, "reason": "user_not_found"})
+        import logging
+        logging.getLogger(__name__).warning(f"Login failed: User not found for email {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",

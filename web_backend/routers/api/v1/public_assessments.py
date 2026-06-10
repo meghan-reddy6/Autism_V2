@@ -46,6 +46,24 @@ async def submit_responses(token: str, data: dict, session = Depends(validate_as
             "updatedAt": datetime.now(timezone.utc)
         }
     )
+    
+    # Generate Audit Log since BaseRepository is bypassed
+    try:
+        await db.auditlog.create(
+            data={
+                "tenant": {"connect": {"id": session.tenantId}},
+                "user": {"connect": {"id": session.createdBy}},
+                "action": "SUBMIT_PUBLIC_ASSESSMENT",
+                "resource": "assessmentsession",
+                "resourceId": session.id,
+                "changes": json.dumps({"status": "SUBMITTED", "response_count": len(responses)}),
+                "ipAddress": "PUBLIC"
+            }
+        )
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Failed to write public audit log: {e}")
+    
     return {"message": "Responses submitted successfully"}
 
 @router.post("/{token}/save-draft")
@@ -58,5 +76,20 @@ async def save_draft(token: str, data: dict, session = Depends(validate_assessme
             where={"id": session.id},
             data={"status": "IN_PROGRESS", "updatedAt": datetime.now(timezone.utc)}
         )
+        try:
+            await db.auditlog.create(
+                data={
+                    "tenant": {"connect": {"id": session.tenantId}},
+                    "user": {"connect": {"id": session.createdBy}},
+                    "action": "SAVE_DRAFT_PUBLIC_ASSESSMENT",
+                    "resource": "assessmentsession",
+                    "resourceId": session.id,
+                    "changes": json.dumps({"status": "IN_PROGRESS"}),
+                    "ipAddress": "PUBLIC"
+                }
+            )
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Failed to write public draft audit log: {e}")
         
     return {"message": "Draft saved"}

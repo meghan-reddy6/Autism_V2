@@ -64,5 +64,9 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
+  if (!authorized) {
+    return null;
+  }
+
   return <>{children}</>;
 }

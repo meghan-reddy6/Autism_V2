@@ -7,9 +7,10 @@ class BaseRepository:
     Base Repository enforcing soft-delete checks by default,
     with automatic Audit Trail logging.
     """
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, has_soft_delete: bool = True):
         self.model_name = model_name
         self.model = getattr(db, model_name)
+        self.has_soft_delete = has_soft_delete
         
     async def _audit_log(self, action: str, before_state: Optional[Dict], after_state: Optional[Dict], changes: Optional[Dict], resource_id: str):
         from core.context import get_tenant_id, get_user_id, get_ip_address
@@ -27,40 +28,41 @@ class BaseRepository:
             if isinstance(obj, (datetime, date)):
                 return obj.isoformat()
             raise TypeError("Type not serializable")
-            
-        b_state = json.loads(json.dumps(before_state, default=json_serial)) if before_state else None
-        a_state = json.loads(json.dumps(after_state, default=json_serial)) if after_state else None
-        c_state = json.loads(json.dumps(changes, default=json_serial)) if changes else None
-            
         try:
-            await db.auditlog.create(data={
+            import json
+            audit_data = {
                 "tenantId": tenant_id,
                 "userId": user_id,
-                "action": action,
-                "resource": self.model_name.capitalize(),
+                "action": action.upper(),
+                "resource": self.model_name,
                 "resourceId": resource_id,
-                "beforeState": b_state,
-                "afterState": a_state,
-                "changes": c_state,
-                "ipAddress": ip_address
-            })
+                "changes": json.dumps(changes) if changes else "{}"
+            }
+            if before_state is not None:
+                audit_data["beforeState"] = json.dumps(before_state, default=str)
+            if after_state is not None:
+                audit_data["afterState"] = json.dumps(after_state, default=str)
+            if ip_address:
+                audit_data["ipAddress"] = ip_address
+                
+            await db.auditlog.create(data=audit_data)
         except Exception as e:
             import logging
             logging.getLogger(__name__).error(f"Audit log failed: {e}")
     
     async def find_unique(self, where: Dict[str, Any], include_deleted: bool = False, **kwargs):
-        if not include_deleted:
+        if self.has_soft_delete and not include_deleted:
             where["isDeleted"] = False
         return await self.model.find_first(where=where, **kwargs)
 
     async def find_first(self, where: Dict[str, Any], include_deleted: bool = False, **kwargs):
-        if not include_deleted:
+        if self.has_soft_delete and not include_deleted:
             where["isDeleted"] = False
         return await self.model.find_first(where=where, **kwargs)
 
     async def find_many(self, where: Optional[Dict[str, Any]] = None, include_deleted: bool = False, **kwargs):
         where = where or {}
-        if not include_deleted:
+        if self.has_soft_delete and not include_deleted:
             where["isDeleted"] = False
         return await self.model.find_many(where=where, **kwargs)
 
@@ -90,6 +92,9 @@ class BaseRepository:
         return result
 
     async def soft_delete(self, where: Dict[str, Any], deleted_by: str = "SYSTEM"):
+        if not self.has_soft_delete:
+            raise NotImplementedError(f"Model {self.model_name} does not support soft delete")
+            
         before_records = await self.model.find_many(where=where)
         data = {
             "isDeleted": True,
@@ -109,6 +114,9 @@ class BaseRepository:
         return result
 
     async def restore(self, where: Dict[str, Any]):
+        if not self.has_soft_delete:
+            raise NotImplementedError(f"Model {self.model_name} does not support soft delete")
+            
         data = {
             "isDeleted": False,
             "deletedAt": None,

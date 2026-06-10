@@ -10,6 +10,8 @@ from database import db
 from auth.authorization import require_permission
 from audit.logger import log_audit
 from fastapi import Request
+from repositories import report_repo, assessment_session_repo
+from core.state_machine import validate_report_transition, validate_assessment_session_transition
 
 router = APIRouter(prefix="/api/v1/reports", tags=["reports"])
 
@@ -19,15 +21,8 @@ ML_SERVICE_URL = os.getenv("ML_SERVICE_URL", "http://ml-service:8001/analyze")
 async def list_reports(
     current_user: Any = Depends(require_permission("view_assessment_session"))
 ):
-    # Need to filter by tenantId, which means we join AssessmentSession
-    reports = await db.report.find_many(
-        where={
-            "session": {
-                "is": {
-                    "tenantId": current_user.tenantId
-                }
-            }
-        },
+    reports = await report_repo.find_many(
+        tenant_id=current_user.tenantId,
         include={
             "session": {
                 "include": {
@@ -46,11 +41,12 @@ async def generate_report(
     request: Request,
     current_user: Any = Depends(require_permission("create_clinical_note"))
 ):
-    session = await db.assessmentsession.find_unique(
-        where={"id": assessmentSessionId},
+    session = await assessment_session_repo.get_by_id(
+        tenant_id=current_user.tenantId,
+        id=assessmentSessionId,
         include={"template": True, "patient": True, "responses": True}
     )
-    if not session or session.tenantId != current_user.tenantId:
+    if not session:
         raise HTTPException(status_code=404, detail="Session not found")
         
     scale_type = session.template.type
@@ -111,7 +107,12 @@ async def generate_report(
         }
     )
     
-    await db.assessmentsession.update(
+    # State machine transition for session
+    if not validate_assessment_session_transition(session.status, "UNDER_REVIEW"):
+        raise HTTPException(status_code=409, detail=f"Cannot transition session from {session.status} to UNDER_REVIEW")
+        
+    await assessment_session_repo.update(
+        tenant_id=current_user.tenantId,
         where={"id": assessmentSessionId},
         data={"status": "UNDER_REVIEW"}
     )
@@ -133,8 +134,9 @@ async def get_report(
     reportId: str,
     current_user: Any = Depends(require_permission("view_assessment_session"))
 ):
-    report = await db.report.find_unique(
-        where={"id": reportId},
+    report = await report_repo.get_by_id(
+        tenant_id=current_user.tenantId,
+        id=reportId,
         include={
             "session": {
                 "include": {
@@ -147,7 +149,7 @@ async def get_report(
         }
     )
     
-    if not report or report.session.tenantId != current_user.tenantId:
+    if not report:
         raise HTTPException(status_code=404, detail="Report not found")
         
     return report
@@ -162,15 +164,19 @@ async def add_report_section(
     reportId: str,
     section: SectionUpdate,
     request: Request,
-    current_user: Any = Depends(require_permission("create_clinical_note"))
+    current_user: Any = Depends(require_permission("update_report"))
 ):
-    report = await db.report.find_unique(
-        where={"id": reportId},
+    report = await report_repo.get_by_id(
+        tenant_id=current_user.tenantId,
+        id=reportId,
         include={"session": True}
     )
     
-    if not report or report.session.tenantId != current_user.tenantId:
+    if not report:
         raise HTTPException(status_code=404, detail="Report not found")
+        
+    if report.status == "APPROVED" or report.status == "ARCHIVED":
+        raise HTTPException(status_code=409, detail="Cannot modify sections of an approved or archived report")
         
     report_section = await db.reportsection.create(
         data={
@@ -183,41 +189,53 @@ async def add_report_section(
     
     return report_section
 
-@router.patch("/{reportId}/approve")
-async def approve_report(
+@router.patch("/{reportId}/status")
+async def update_report_status(
     reportId: str,
+    status_data: dict,
     request: Request,
     current_user: Any = Depends(require_permission("approve_report"))
 ):
-    report = await db.report.find_unique(
-        where={"id": reportId},
+    report = await report_repo.get_by_id(
+        tenant_id=current_user.tenantId,
+        id=reportId,
         include={"session": True}
     )
     
-    if not report or report.session.tenantId != current_user.tenantId:
+    if not report:
         raise HTTPException(status_code=404, detail="Report not found")
         
-    updated_report = await db.report.update(
-        where={"id": reportId},
-        data={
-            "status": "APPROVED",
-            "approvedBy": current_user.id,
-            "approvedAt": datetime.now(timezone.utc)
-        }
-    )
+    new_status = status_data.get("status")
+    if not validate_report_transition(report.status, new_status):
+        raise HTTPException(status_code=409, detail=f"Invalid transition from {report.status} to {new_status}")
+        
+    update_data = {"status": new_status, "updatedAt": datetime.now(timezone.utc)}
     
-    await db.assessmentsession.update(
-        where={"id": report.session.id},
-        data={
-            "status": "APPROVED",
-            "approvedBy": current_user.id
-        }
+    if new_status == "APPROVED":
+        update_data["approvedBy"] = current_user.id
+        update_data["approvedAt"] = datetime.now(timezone.utc)
+        
+        # Also transition session to APPROVED
+        if validate_assessment_session_transition(report.session.status, "APPROVED"):
+            await assessment_session_repo.update(
+                tenant_id=current_user.tenantId,
+                where={"id": report.session.id},
+                data={
+                    "status": "APPROVED",
+                    "approvedBy": current_user.id
+                }
+            )
+        
+    updated_report = await report_repo.update(
+        tenant_id=current_user.tenantId,
+        where={"id": reportId},
+        data=update_data
     )
     
     await log_audit(
         user_id=current_user.id,
         tenant_id=current_user.tenantId,
-        action="APPROVE_REPORT",
+        action=f"REPORT_STATUS_{new_status}",
         resource_type="Report",
         resource_id=report.id,
         request=request
@@ -225,17 +243,27 @@ async def approve_report(
     
     return updated_report
 
+@router.patch("/{reportId}/approve")
+async def approve_report(
+    reportId: str,
+    request: Request,
+    current_user: Any = Depends(require_permission("approve_report"))
+):
+    # Delegate to the state machine endpoint
+    return await update_report_status(reportId, {"status": "APPROVED"}, request, current_user)
+
 @router.get("/{reportId}/export/pdf")
 async def export_report_pdf(
     reportId: str,
     current_user: Any = Depends(require_permission("view_assessment_session"))
 ):
-    report = await db.report.find_unique(
-        where={"id": reportId},
+    report = await report_repo.get_by_id(
+        tenant_id=current_user.tenantId,
+        id=reportId,
         include={"session": True}
     )
     
-    if not report or report.session.tenantId != current_user.tenantId:
+    if not report:
         raise HTTPException(status_code=404, detail="Report not found")
         
     # Placeholder for Phase 8 PDF Export
