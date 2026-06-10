@@ -15,12 +15,20 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     let mounted = true;
 
     const verifySession = async () => {
-      if (!token) {
-        if (mounted) {
-          setIsChecking(false)
-          router.replace("/login")
+      let activeToken = token;
+      
+      if (!activeToken) {
+        // Wait a tiny bit for Zustand persist hydration
+        await new Promise(r => setTimeout(r, 150));
+        activeToken = useAuthStore.getState().token;
+        
+        if (!activeToken) {
+          if (mounted) {
+            setIsChecking(false);
+            router.replace("/login");
+          }
+          return;
         }
-        return
       }
 
       try {
