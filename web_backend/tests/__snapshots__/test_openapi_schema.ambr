@@ -1,0 +1,2756 @@
+# serializer version: 1
+# name: test_openapi_schema_snapshot
+  dict({
+    'components': dict({
+      'schemas': dict({
+        'Body_login_api_v1_auth_login_post': dict({
+          'properties': dict({
+            'client_id': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'string',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Client Id',
+            }),
+            'client_secret': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'string',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Client Secret',
+            }),
+            'grant_type': dict({
+              'anyOf': list([
+                dict({
+                  'pattern': 'password',
+                  'type': 'string',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Grant Type',
+            }),
+            'password': dict({
+              'title': 'Password',
+              'type': 'string',
+            }),
+            'scope': dict({
+              'default': '',
+              'title': 'Scope',
+              'type': 'string',
+            }),
+            'username': dict({
+              'title': 'Username',
+              'type': 'string',
+            }),
+          }),
+          'required': list([
+            'username',
+            'password',
+          ]),
+          'title': 'Body_login_api_v1_auth_login_post',
+          'type': 'object',
+        }),
+        'ChangePasswordRequest': dict({
+          'properties': dict({
+            'current_password': dict({
+              'title': 'Current Password',
+              'type': 'string',
+            }),
+            'new_password': dict({
+              'title': 'New Password',
+              'type': 'string',
+            }),
+          }),
+          'required': list([
+            'current_password',
+            'new_password',
+          ]),
+          'title': 'ChangePasswordRequest',
+          'type': 'object',
+        }),
+        'HTTPValidationError': dict({
+          'properties': dict({
+            'detail': dict({
+              'items': dict({
+                '$ref': '#/components/schemas/ValidationError',
+              }),
+              'title': 'Detail',
+              'type': 'array',
+            }),
+          }),
+          'title': 'HTTPValidationError',
+          'type': 'object',
+        }),
+        'OrganizationCreate': dict({
+          'properties': dict({
+            'featureFlags': dict({
+              'default': list([
+              ]),
+              'items': dict({
+                'type': 'string',
+              }),
+              'title': 'Featureflags',
+              'type': 'array',
+            }),
+            'maxStorageGB': dict({
+              'default': 100,
+              'title': 'Maxstoragegb',
+              'type': 'integer',
+            }),
+            'maxUsers': dict({
+              'default': 500,
+              'title': 'Maxusers',
+              'type': 'integer',
+            }),
+            'name': dict({
+              'title': 'Name',
+              'type': 'string',
+            }),
+            'subscriptionTier': dict({
+              'title': 'Subscriptiontier',
+              'type': 'string',
+            }),
+          }),
+          'required': list([
+            'name',
+            'subscriptionTier',
+          ]),
+          'title': 'OrganizationCreate',
+          'type': 'object',
+        }),
+        'OrganizationUpdate': dict({
+          'properties': dict({
+            'maxStorageGB': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'integer',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Maxstoragegb',
+            }),
+            'maxUsers': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'integer',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Maxusers',
+            }),
+            'name': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'string',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Name',
+            }),
+            'status': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'string',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Status',
+            }),
+            'subscriptionTier': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'string',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Subscriptiontier',
+            }),
+          }),
+          'title': 'OrganizationUpdate',
+          'type': 'object',
+        }),
+        'PatientCreate': dict({
+          'properties': dict({
+            'address': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'string',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Address',
+            }),
+            'dateOfBirth': dict({
+              'format': 'date-time',
+              'title': 'Dateofbirth',
+              'type': 'string',
+            }),
+            'emergencyContact': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'string',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Emergencycontact',
+            }),
+            'firstName': dict({
+              'title': 'Firstname',
+              'type': 'string',
+            }),
+            'gender': dict({
+              'title': 'Gender',
+              'type': 'string',
+            }),
+            'guardianEmail': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'string',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Guardianemail',
+            }),
+            'guardianName': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'string',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Guardianname',
+            }),
+            'guardianPhone': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'string',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Guardianphone',
+            }),
+            'lastName': dict({
+              'title': 'Lastname',
+              'type': 'string',
+            }),
+            'referringPhysician': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'string',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Referringphysician',
+            }),
+          }),
+          'required': list([
+            'firstName',
+            'lastName',
+            'dateOfBirth',
+            'gender',
+          ]),
+          'title': 'PatientCreate',
+          'type': 'object',
+        }),
+        'PatientSummaryResponse': dict({
+          'additionalProperties': True,
+          'properties': dict({
+            'clinicalNotesCount': dict({
+              'default': 0,
+              'title': 'Clinicalnotescount',
+              'type': 'integer',
+            }),
+            'dateOfBirth': dict({
+              'format': 'date-time',
+              'title': 'Dateofbirth',
+              'type': 'string',
+            }),
+            'firstName': dict({
+              'title': 'Firstname',
+              'type': 'string',
+            }),
+            'gender': dict({
+              'title': 'Gender',
+              'type': 'string',
+            }),
+            'id': dict({
+              'title': 'Id',
+              'type': 'string',
+            }),
+            'lastName': dict({
+              'title': 'Lastname',
+              'type': 'string',
+            }),
+            'mrn': dict({
+              'title': 'Mrn',
+              'type': 'string',
+            }),
+          }),
+          'required': list([
+            'id',
+            'mrn',
+            'firstName',
+            'lastName',
+            'dateOfBirth',
+            'gender',
+          ]),
+          'title': 'PatientSummaryResponse',
+          'type': 'object',
+        }),
+        'RefreshRequest': dict({
+          'properties': dict({
+            'refresh_token': dict({
+              'title': 'Refresh Token',
+              'type': 'string',
+            }),
+          }),
+          'required': list([
+            'refresh_token',
+          ]),
+          'title': 'RefreshRequest',
+          'type': 'object',
+        }),
+        'SectionUpdate': dict({
+          'properties': dict({
+            'content': dict({
+              'title': 'Content',
+              'type': 'string',
+            }),
+            'name': dict({
+              'title': 'Name',
+              'type': 'string',
+            }),
+            'order': dict({
+              'default': 0,
+              'title': 'Order',
+              'type': 'integer',
+            }),
+          }),
+          'required': list([
+            'name',
+            'content',
+          ]),
+          'title': 'SectionUpdate',
+          'type': 'object',
+        }),
+        'TokenResponse': dict({
+          'properties': dict({
+            'access_token': dict({
+              'title': 'Access Token',
+              'type': 'string',
+            }),
+            'refresh_token': dict({
+              'title': 'Refresh Token',
+              'type': 'string',
+            }),
+            'token_type': dict({
+              'title': 'Token Type',
+              'type': 'string',
+            }),
+            'user': dict({
+              'title': 'User',
+              'type': 'object',
+            }),
+          }),
+          'required': list([
+            'access_token',
+            'token_type',
+            'user',
+          ]),
+          'title': 'TokenResponse',
+          'type': 'object',
+        }),
+        'UserCreate': dict({
+          'properties': dict({
+            'email': dict({
+              'title': 'Email',
+              'type': 'string',
+            }),
+            'firstName': dict({
+              'title': 'Firstname',
+              'type': 'string',
+            }),
+            'lastName': dict({
+              'title': 'Lastname',
+              'type': 'string',
+            }),
+            'password': dict({
+              'default': 'Welcome@123',
+              'title': 'Password',
+              'type': 'string',
+            }),
+            'role': dict({
+              'title': 'Role',
+              'type': 'string',
+            }),
+            'tenantId': dict({
+              'title': 'Tenantid',
+              'type': 'string',
+            }),
+          }),
+          'required': list([
+            'email',
+            'firstName',
+            'lastName',
+            'role',
+            'tenantId',
+          ]),
+          'title': 'UserCreate',
+          'type': 'object',
+        }),
+        'UserUpdate': dict({
+          'properties': dict({
+            'firstName': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'string',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Firstname',
+            }),
+            'isActive': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'boolean',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Isactive',
+            }),
+            'lastName': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'string',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Lastname',
+            }),
+            'role': dict({
+              'anyOf': list([
+                dict({
+                  'type': 'string',
+                }),
+                dict({
+                  'type': 'null',
+                }),
+              ]),
+              'title': 'Role',
+            }),
+          }),
+          'title': 'UserUpdate',
+          'type': 'object',
+        }),
+        'ValidationError': dict({
+          'properties': dict({
+            'loc': dict({
+              'items': dict({
+                'anyOf': list([
+                  dict({
+                    'type': 'string',
+                  }),
+                  dict({
+                    'type': 'integer',
+                  }),
+                ]),
+              }),
+              'title': 'Location',
+              'type': 'array',
+            }),
+            'msg': dict({
+              'title': 'Message',
+              'type': 'string',
+            }),
+            'type': dict({
+              'title': 'Error Type',
+              'type': 'string',
+            }),
+          }),
+          'required': list([
+            'loc',
+            'msg',
+            'type',
+          ]),
+          'title': 'ValidationError',
+          'type': 'object',
+        }),
+        'VerifyRequest': dict({
+          'properties': dict({
+            'pin': dict({
+              'title': 'Pin',
+              'type': 'string',
+            }),
+          }),
+          'required': list([
+            'pin',
+          ]),
+          'title': 'VerifyRequest',
+          'type': 'object',
+        }),
+      }),
+      'securitySchemes': dict({
+        'OAuth2PasswordBearer': dict({
+          'flows': dict({
+            'password': dict({
+              'scopes': dict({
+              }),
+              'tokenUrl': 'api/v1/auth/login',
+            }),
+          }),
+          'type': 'oauth2',
+        }),
+      }),
+    }),
+    'info': dict({
+      'description': 'Electronic Medical Record (EMR) and Clinical Decision Support System (CDSS) Backend',
+      'title': 'Enterprise Clinical SaaS API',
+      'version': '2.0.0',
+    }),
+    'openapi': '3.1.0',
+    'paths': dict({
+      '/api/v1/admin/analytics': dict({
+        'get': dict({
+          'operationId': 'get_analytics_api_v1_admin_analytics_get',
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Get Analytics',
+          'tags': list([
+            'Super Admin',
+          ]),
+        }),
+      }),
+      '/api/v1/admin/audit-logs': dict({
+        'get': dict({
+          'operationId': 'get_audit_logs_api_v1_admin_audit_logs_get',
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Get Audit Logs',
+          'tags': list([
+            'Super Admin',
+          ]),
+        }),
+      }),
+      '/api/v1/admin/organizations': dict({
+        'get': dict({
+          'operationId': 'list_organizations_api_v1_admin_organizations_get',
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'List Organizations',
+          'tags': list([
+            'Super Admin',
+          ]),
+        }),
+        'post': dict({
+          'operationId': 'create_organization_api_v1_admin_organizations_post',
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  '$ref': '#/components/schemas/OrganizationCreate',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Create Organization',
+          'tags': list([
+            'Super Admin',
+          ]),
+        }),
+      }),
+      '/api/v1/admin/organizations/{org_id}': dict({
+        'get': dict({
+          'operationId': 'get_organization_api_v1_admin_organizations__org_id__get',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'org_id',
+              'required': True,
+              'schema': dict({
+                'title': 'Org Id',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Get Organization',
+          'tags': list([
+            'Super Admin',
+          ]),
+        }),
+        'patch': dict({
+          'operationId': 'update_organization_api_v1_admin_organizations__org_id__patch',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'org_id',
+              'required': True,
+              'schema': dict({
+                'title': 'Org Id',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  '$ref': '#/components/schemas/OrganizationUpdate',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Update Organization',
+          'tags': list([
+            'Super Admin',
+          ]),
+        }),
+      }),
+      '/api/v1/admin/roles': dict({
+        'get': dict({
+          'operationId': 'get_roles_api_v1_admin_roles_get',
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Get Roles',
+          'tags': list([
+            'Super Admin',
+          ]),
+        }),
+      }),
+      '/api/v1/admin/users': dict({
+        'get': dict({
+          'operationId': 'list_users_api_v1_admin_users_get',
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'List Users',
+          'tags': list([
+            'Super Admin',
+          ]),
+        }),
+        'post': dict({
+          'operationId': 'create_user_api_v1_admin_users_post',
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  '$ref': '#/components/schemas/UserCreate',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Create User',
+          'tags': list([
+            'Super Admin',
+          ]),
+        }),
+      }),
+      '/api/v1/admin/users/{user_id}': dict({
+        'delete': dict({
+          'operationId': 'delete_user_api_v1_admin_users__user_id__delete',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'user_id',
+              'required': True,
+              'schema': dict({
+                'title': 'User Id',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Delete User',
+          'tags': list([
+            'Super Admin',
+          ]),
+        }),
+        'patch': dict({
+          'operationId': 'update_user_api_v1_admin_users__user_id__patch',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'user_id',
+              'required': True,
+              'schema': dict({
+                'title': 'User Id',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  '$ref': '#/components/schemas/UserUpdate',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Update User',
+          'tags': list([
+            'Super Admin',
+          ]),
+        }),
+      }),
+      '/api/v1/assessment-inbox': dict({
+        'get': dict({
+          'operationId': 'list_assessment_inbox_api_v1_assessment_inbox_get',
+          'parameters': list([
+            dict({
+              'in': 'query',
+              'name': 'status',
+              'required': False,
+              'schema': dict({
+                'anyOf': list([
+                  dict({
+                    'type': 'string',
+                  }),
+                  dict({
+                    'type': 'null',
+                  }),
+                ]),
+                'title': 'Status',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'List Assessment Inbox',
+          'tags': list([
+            'assessment-inbox',
+          ]),
+        }),
+      }),
+      '/api/v1/assessment-inbox/stats': dict({
+        'get': dict({
+          'operationId': 'get_assessment_inbox_stats_api_v1_assessment_inbox_stats_get',
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Get Assessment Inbox Stats',
+          'tags': list([
+            'assessment-inbox',
+          ]),
+        }),
+      }),
+      '/api/v1/assessment-sessions': dict({
+        'get': dict({
+          'operationId': 'list_sessions_api_v1_assessment_sessions_get',
+          'parameters': list([
+            dict({
+              'in': 'query',
+              'name': 'patientId',
+              'required': False,
+              'schema': dict({
+                'anyOf': list([
+                  dict({
+                    'type': 'string',
+                  }),
+                  dict({
+                    'type': 'null',
+                  }),
+                ]),
+                'title': 'Patientid',
+              }),
+            }),
+            dict({
+              'in': 'query',
+              'name': 'status',
+              'required': False,
+              'schema': dict({
+                'anyOf': list([
+                  dict({
+                    'type': 'string',
+                  }),
+                  dict({
+                    'type': 'null',
+                  }),
+                ]),
+                'title': 'Status',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'List Sessions',
+          'tags': list([
+            'Assessment Sessions',
+          ]),
+        }),
+        'post': dict({
+          'operationId': 'create_session_api_v1_assessment_sessions_post',
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  'title': 'Session Data',
+                  'type': 'object',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '201': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Create Session',
+          'tags': list([
+            'Assessment Sessions',
+          ]),
+        }),
+      }),
+      '/api/v1/assessment-sessions/{session_id}': dict({
+        'delete': dict({
+          'operationId': 'delete_session_api_v1_assessment_sessions__session_id__delete',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'session_id',
+              'required': True,
+              'schema': dict({
+                'title': 'Session Id',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Delete Session',
+          'tags': list([
+            'Assessment Sessions',
+          ]),
+        }),
+        'get': dict({
+          'operationId': 'get_session_api_v1_assessment_sessions__session_id__get',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'session_id',
+              'required': True,
+              'schema': dict({
+                'title': 'Session Id',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Get Session',
+          'tags': list([
+            'Assessment Sessions',
+          ]),
+        }),
+      }),
+      '/api/v1/assessment-sessions/{session_id}/status': dict({
+        'patch': dict({
+          'operationId': 'update_status_api_v1_assessment_sessions__session_id__status_patch',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'session_id',
+              'required': True,
+              'schema': dict({
+                'title': 'Session Id',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  'title': 'Status Data',
+                  'type': 'object',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Update Status',
+          'tags': list([
+            'Assessment Sessions',
+          ]),
+        }),
+      }),
+      '/api/v1/assessment-templates/': dict({
+        'get': dict({
+          'operationId': 'list_templates_api_v1_assessment_templates__get',
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'List Templates',
+          'tags': list([
+            'Assessment Templates',
+          ]),
+        }),
+        'post': dict({
+          'operationId': 'create_template_api_v1_assessment_templates__post',
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  'title': 'Template Data',
+                  'type': 'object',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Create Template',
+          'tags': list([
+            'Assessment Templates',
+          ]),
+        }),
+      }),
+      '/api/v1/assessment-templates/{template_id}': dict({
+        'get': dict({
+          'operationId': 'get_template_api_v1_assessment_templates__template_id__get',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'template_id',
+              'required': True,
+              'schema': dict({
+                'title': 'Template Id',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Get Template',
+          'tags': list([
+            'Assessment Templates',
+          ]),
+        }),
+        'patch': dict({
+          'operationId': 'update_template_api_v1_assessment_templates__template_id__patch',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'template_id',
+              'required': True,
+              'schema': dict({
+                'title': 'Template Id',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  'title': 'Template Data',
+                  'type': 'object',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Update Template',
+          'tags': list([
+            'Assessment Templates',
+          ]),
+        }),
+      }),
+      '/api/v1/auth/change-password': dict({
+        'post': dict({
+          'operationId': 'change_password_api_v1_auth_change_password_post',
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  '$ref': '#/components/schemas/ChangePasswordRequest',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Change Password',
+          'tags': list([
+            'auth',
+          ]),
+        }),
+      }),
+      '/api/v1/auth/login': dict({
+        'post': dict({
+          'operationId': 'login_api_v1_auth_login_post',
+          'requestBody': dict({
+            'content': dict({
+              'application/x-www-form-urlencoded': dict({
+                'schema': dict({
+                  '$ref': '#/components/schemas/Body_login_api_v1_auth_login_post',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/TokenResponse',
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'summary': 'Login',
+          'tags': list([
+            'auth',
+          ]),
+        }),
+      }),
+      '/api/v1/auth/logout': dict({
+        'post': dict({
+          'operationId': 'logout_api_v1_auth_logout_post',
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  '$ref': '#/components/schemas/RefreshRequest',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'summary': 'Logout',
+          'tags': list([
+            'auth',
+          ]),
+        }),
+      }),
+      '/api/v1/auth/me': dict({
+        'get': dict({
+          'operationId': 'get_me_api_v1_auth_me_get',
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Get Me',
+          'tags': list([
+            'auth',
+          ]),
+        }),
+      }),
+      '/api/v1/auth/refresh': dict({
+        'post': dict({
+          'operationId': 'refresh_token_api_v1_auth_refresh_post',
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  '$ref': '#/components/schemas/RefreshRequest',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'summary': 'Refresh Token',
+          'tags': list([
+            'auth',
+          ]),
+        }),
+      }),
+      '/api/v1/dashboard/stats': dict({
+        'get': dict({
+          'operationId': 'get_dashboard_stats_api_v1_dashboard_stats_get',
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Get Dashboard Stats',
+          'tags': list([
+            'dashboard',
+          ]),
+        }),
+      }),
+      '/api/v1/mfa/disable': dict({
+        'post': dict({
+          'operationId': 'disable_mfa_api_v1_mfa_disable_post',
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  '$ref': '#/components/schemas/VerifyRequest',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Disable Mfa',
+          'tags': list([
+            'mfa',
+          ]),
+        }),
+      }),
+      '/api/v1/mfa/setup': dict({
+        'post': dict({
+          'operationId': 'setup_mfa_api_v1_mfa_setup_post',
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Setup Mfa',
+          'tags': list([
+            'mfa',
+          ]),
+        }),
+      }),
+      '/api/v1/mfa/verify': dict({
+        'post': dict({
+          'operationId': 'verify_mfa_api_v1_mfa_verify_post',
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  '$ref': '#/components/schemas/VerifyRequest',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Verify Mfa',
+          'tags': list([
+            'mfa',
+          ]),
+        }),
+      }),
+      '/api/v1/patients': dict({
+        'get': dict({
+          'operationId': 'list_patients_api_v1_patients_get',
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    'items': dict({
+                      '$ref': '#/components/schemas/PatientSummaryResponse',
+                    }),
+                    'title': 'Response List Patients Api V1 Patients Get',
+                    'type': 'array',
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'List Patients',
+          'tags': list([
+            'patients',
+          ]),
+        }),
+        'post': dict({
+          'operationId': 'create_patient_api_v1_patients_post',
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  '$ref': '#/components/schemas/PatientCreate',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '201': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/PatientSummaryResponse',
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Create Patient',
+          'tags': list([
+            'patients',
+          ]),
+        }),
+      }),
+      '/api/v1/patients/{patient_id}': dict({
+        'get': dict({
+          'operationId': 'get_patient_api_v1_patients__patient_id__get',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'patient_id',
+              'required': True,
+              'schema': dict({
+                'title': 'Patient Id',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/PatientSummaryResponse',
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Get Patient',
+          'tags': list([
+            'patients',
+          ]),
+        }),
+      }),
+      '/api/v1/patients/{patient_id}/assessments': dict({
+        'get': dict({
+          'operationId': 'get_patient_assessments_api_v1_patients__patient_id__assessments_get',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'patient_id',
+              'required': True,
+              'schema': dict({
+                'title': 'Patient Id',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Get Patient Assessments',
+          'tags': list([
+            'patients',
+          ]),
+        }),
+      }),
+      '/api/v1/public/assessment/{token}': dict({
+        'get': dict({
+          'operationId': 'get_assessment_form_api_v1_public_assessment__token__get',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'token',
+              'required': True,
+              'schema': dict({
+                'title': 'Token',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'summary': 'Get Assessment Form',
+          'tags': list([
+            'Public Assessments',
+          ]),
+        }),
+      }),
+      '/api/v1/public/assessment/{token}/responses': dict({
+        'post': dict({
+          'operationId': 'submit_responses_api_v1_public_assessment__token__responses_post',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'token',
+              'required': True,
+              'schema': dict({
+                'title': 'Token',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  'title': 'Data',
+                  'type': 'object',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'summary': 'Submit Responses',
+          'tags': list([
+            'Public Assessments',
+          ]),
+        }),
+      }),
+      '/api/v1/public/assessment/{token}/save-draft': dict({
+        'post': dict({
+          'operationId': 'save_draft_api_v1_public_assessment__token__save_draft_post',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'token',
+              'required': True,
+              'schema': dict({
+                'title': 'Token',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  'title': 'Data',
+                  'type': 'object',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'summary': 'Save Draft',
+          'tags': list([
+            'Public Assessments',
+          ]),
+        }),
+      }),
+      '/api/v1/recycle-bin/patients': dict({
+        'get': dict({
+          'operationId': 'list_deleted_patients_api_v1_recycle_bin_patients_get',
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'List Deleted Patients',
+          'tags': list([
+            'Recycle Bin',
+          ]),
+        }),
+      }),
+      '/api/v1/recycle-bin/patients/{patient_id}/purge': dict({
+        'delete': dict({
+          'description': 'Hard delete a patient - SUPER ADMIN ONLY',
+          'operationId': 'purge_patient_api_v1_recycle_bin_patients__patient_id__purge_delete',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'patient_id',
+              'required': True,
+              'schema': dict({
+                'title': 'Patient Id',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Purge Patient',
+          'tags': list([
+            'Recycle Bin',
+          ]),
+        }),
+      }),
+      '/api/v1/recycle-bin/patients/{patient_id}/restore': dict({
+        'post': dict({
+          'operationId': 'restore_patient_api_v1_recycle_bin_patients__patient_id__restore_post',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'patient_id',
+              'required': True,
+              'schema': dict({
+                'title': 'Patient Id',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Restore Patient',
+          'tags': list([
+            'Recycle Bin',
+          ]),
+        }),
+      }),
+      '/api/v1/reports': dict({
+        'get': dict({
+          'operationId': 'list_reports_api_v1_reports_get',
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'List Reports',
+          'tags': list([
+            'reports',
+          ]),
+        }),
+      }),
+      '/api/v1/reports/generate/{assessmentSessionId}': dict({
+        'post': dict({
+          'operationId': 'generate_report_api_v1_reports_generate__assessmentSessionId__post',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'assessmentSessionId',
+              'required': True,
+              'schema': dict({
+                'title': 'Assessmentsessionid',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Generate Report',
+          'tags': list([
+            'reports',
+          ]),
+        }),
+      }),
+      '/api/v1/reports/{reportId}': dict({
+        'get': dict({
+          'operationId': 'get_report_api_v1_reports__reportId__get',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'reportId',
+              'required': True,
+              'schema': dict({
+                'title': 'Reportid',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Get Report',
+          'tags': list([
+            'reports',
+          ]),
+        }),
+      }),
+      '/api/v1/reports/{reportId}/approve': dict({
+        'patch': dict({
+          'operationId': 'approve_report_api_v1_reports__reportId__approve_patch',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'reportId',
+              'required': True,
+              'schema': dict({
+                'title': 'Reportid',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Approve Report',
+          'tags': list([
+            'reports',
+          ]),
+        }),
+      }),
+      '/api/v1/reports/{reportId}/export/pdf': dict({
+        'get': dict({
+          'operationId': 'export_report_pdf_api_v1_reports__reportId__export_pdf_get',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'reportId',
+              'required': True,
+              'schema': dict({
+                'title': 'Reportid',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Export Report Pdf',
+          'tags': list([
+            'reports',
+          ]),
+        }),
+      }),
+      '/api/v1/reports/{reportId}/sections': dict({
+        'patch': dict({
+          'operationId': 'add_report_section_api_v1_reports__reportId__sections_patch',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'reportId',
+              'required': True,
+              'schema': dict({
+                'title': 'Reportid',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  '$ref': '#/components/schemas/SectionUpdate',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Add Report Section',
+          'tags': list([
+            'reports',
+          ]),
+        }),
+      }),
+      '/api/v1/super-admin/system/health': dict({
+        'get': dict({
+          'description': 'Returns overall platform metrics',
+          'operationId': 'get_system_health_api_v1_super_admin_system_health_get',
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Get System Health',
+          'tags': list([
+            'Super Admin',
+          ]),
+        }),
+      }),
+      '/api/v1/super-admin/tenants': dict({
+        'get': dict({
+          'operationId': 'list_tenants_api_v1_super_admin_tenants_get',
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'List Tenants',
+          'tags': list([
+            'Super Admin',
+          ]),
+        }),
+      }),
+      '/api/v1/super-admin/tenants/{tenant_id}/reactivate': dict({
+        'post': dict({
+          'operationId': 'reactivate_tenant_api_v1_super_admin_tenants__tenant_id__reactivate_post',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'tenant_id',
+              'required': True,
+              'schema': dict({
+                'title': 'Tenant Id',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Reactivate Tenant',
+          'tags': list([
+            'Super Admin',
+          ]),
+        }),
+      }),
+      '/api/v1/super-admin/tenants/{tenant_id}/suspend': dict({
+        'post': dict({
+          'operationId': 'suspend_tenant_api_v1_super_admin_tenants__tenant_id__suspend_post',
+          'parameters': list([
+            dict({
+              'in': 'path',
+              'name': 'tenant_id',
+              'required': True,
+              'schema': dict({
+                'title': 'Tenant Id',
+                'type': 'string',
+              }),
+            }),
+          ]),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Suspend Tenant',
+          'tags': list([
+            'Super Admin',
+          ]),
+        }),
+      }),
+      '/api/v1/super-admin/users/bulk-action': dict({
+        'post': dict({
+          'description': '''
+            Expects:
+            {
+               "action": "deactivate" | "activate",
+               "userIds": ["id1", "id2"]
+            }
+          ''',
+          'operationId': 'bulk_user_action_api_v1_super_admin_users_bulk_action_post',
+          'requestBody': dict({
+            'content': dict({
+              'application/json': dict({
+                'schema': dict({
+                  'title': 'Payload',
+                  'type': 'object',
+                }),
+              }),
+            }),
+            'required': True,
+          }),
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+            '422': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                    '$ref': '#/components/schemas/HTTPValidationError',
+                  }),
+                }),
+              }),
+              'description': 'Validation Error',
+            }),
+          }),
+          'security': list([
+            dict({
+              'OAuth2PasswordBearer': list([
+              ]),
+            }),
+          ]),
+          'summary': 'Bulk User Action',
+          'tags': list([
+            'Super Admin',
+          ]),
+        }),
+      }),
+      '/health': dict({
+        'get': dict({
+          'operationId': 'health_check_health_get',
+          'responses': dict({
+            '200': dict({
+              'content': dict({
+                'application/json': dict({
+                  'schema': dict({
+                  }),
+                }),
+              }),
+              'description': 'Successful Response',
+            }),
+          }),
+          'summary': 'Health Check',
+        }),
+      }),
+    }),
+  })
+# ---

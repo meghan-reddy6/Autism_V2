@@ -1,0 +1,28 @@
+{
+    "exceptions": [
+        {
+            "source_file": "routers/api/v1/dummy.py",
+            "forbidden_module": "database",
+            "reason": "Example configuration for CLI tool bypass",
+            "approved_by": "Jira-1234"
+        },
+        {
+            "source_file": "services/patient_service.py",
+            "forbidden_module": "database",
+            "reason": "Required for explicit transaction boundaries during MRN generation",
+            "approved_by": "Phase-6.5-Architecture-Review"
+        },
+        {
+            "source_file": "services/dashboard_service.py",
+            "forbidden_module": "database",
+            "reason": "Dashboard natively aggregates across tables which bypasses individual repo scopes. Required for performance.",
+            "approved_by": "Phase-7-Performance-Review"
+        },
+        {
+            "source_file": "routers/api/v1/public_assessments.py",
+            "forbidden_module": "database",
+            "reason": "Public unauthenticated route using direct Prisma Client for read-heavy operations during cache misses.",
+            "approved_by": "Phase-7-Performance-Review"
+        }
+    ]
+}

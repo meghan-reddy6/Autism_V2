@@ -70,6 +70,7 @@ model User {
   mfaSecret           String?
   passwordChangedAt   DateTime?
   failedLoginAttempts Int      @default(0)
+  lockedUntil         DateTime?
 
   tenant       Tenant   @relation(fields: [tenantId], references: [id])
   sessions     UserSession[]
@@ -227,6 +228,9 @@ model AuditLog {
   action       String   // e.g., "VIEW_PATIENT", "EDIT_NOTE"
   resource     String   // "Patient", "Assessment"
   resourceId   String
+  beforeState  Json?
+  afterState   Json?
+  changes      Json?
   timestamp    DateTime @default(now())
   ipAddress    String?
 

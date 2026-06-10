@@ -12,7 +12,7 @@ class MockUser:
         self.isActive = True
 
 @app.get("/api/v1/test-rbac")
-async def test_route(current_user = Depends(require_roles(["SUPER_ADMIN"]))):
+async def dummy_route(current_user = Depends(require_roles(["SUPER_ADMIN"]))):
     return {"message": "success"}
 
 def test_rbac_success():

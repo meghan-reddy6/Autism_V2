@@ -1,0 +1,14 @@
+# serializer version: 1
+# name: test_list_patients_snapshot
+  list([
+    dict({
+      'clinicalNotesCount': 0,
+      'dateOfBirth': '1990-01-01T00:00:00Z',
+      'firstName': 'John',
+      'gender': 'Male',
+      'id': 'p1',
+      'lastName': 'Doe',
+      'mrn': 'MRN-12345678',
+    }),
+  ])
+# ---

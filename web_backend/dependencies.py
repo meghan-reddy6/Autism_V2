@@ -6,6 +6,10 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from core.context import current_tenant_id, current_user_id, current_user_role
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -21,19 +25,21 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login", auto_error=False)
 
+import uuid
+
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
+        
+    jti = str(uuid.uuid4())
+    to_encode.update({"exp": expire, "jti": jti})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 async def get_current_user(token: str = Depends(oauth2_scheme), request: Request = None):
-    # We must import db here to avoid circular imports if db is defined in database.py
-    from database import db
-    
+    from repositories import user_repo
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -48,11 +54,22 @@ async def get_current_user(token: str = Depends(oauth2_scheme), request: Request
         raise credentials_exception
 
     user_id = None
+    jti = None
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub")
-        if user_id is None:
+        jti = payload.get("jti")
+        if user_id is None or jti is None:
             raise credentials_exception
+            
+        # Check Redis Blocklist
+        from fastapi_cache import FastAPICache
+        backend = FastAPICache.get_backend()
+        if backend and hasattr(backend, "redis"):
+            is_blacklisted = await backend.redis.get(f"jwt_blocklist:{jti}")
+            if is_blacklisted:
+                raise credentials_exception
+                
     except JWTError:
         import logging
         logger = logging.getLogger(__name__)
@@ -60,11 +77,19 @@ async def get_current_user(token: str = Depends(oauth2_scheme), request: Request
             logger.warning(f"Invalid token access attempt to {request.url.path}")
         raise credentials_exception
         
-    user = await db.user.find_unique(where={"id": user_id})
+    user = await user_repo.find_unique(where={"id": user_id})
     if user is None:
         raise credentials_exception
     if not user.isActive:
         raise HTTPException(status_code=400, detail="Inactive user")
+        
+    # Set context variables for TenantAwareRepository enforcement
+    current_tenant_id.set(user.tenantId)
+    current_user_id.set(user.id)
+    # Handle enum or string for role
+    role_str = getattr(user.role, "name", str(user.role)).replace("Role.", "")
+    current_user_role.set(role_str)
+    
     return user
 
 ROLE_HIERARCHY = {
@@ -116,24 +141,11 @@ def require_roles(minimum_role_or_roles):
         return current_user
     return role_checker
 
-async def get_current_user_or_none(token: str = Depends(oauth2_scheme)):
-    if not token:
-        return None
-    try:
-        from database import db
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-        if user_id:
-            user = await db.user.find_unique(where={"id": user_id})
-            if user and user.isActive:
-                return user
-    except Exception:
-        pass
-    return None
+
 
 async def validate_assessment_token(token: str):
-    from database import db
-    session = await db.assessmentsession.find_unique(
+    from repositories import assessment_repo
+    session = await assessment_repo.find_unique(
         where={"token": token},
         include={"template": True, "patient": True}
     )

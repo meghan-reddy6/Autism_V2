@@ -1,0 +1,27 @@
+[importlinter]
+root_packages =
+    routers
+    services
+    repositories
+    core
+    auth
+    database
+include_external_packages = True
+
+[importlinter:contract:1]
+name = Enforce N-Tier Architecture Boundaries
+type = layers
+layers =
+    routers
+    services
+    repositories
+    core
+
+[importlinter:contract:2]
+name = Routers cannot access database
+type = forbidden
+source_modules =
+    routers
+forbidden_modules =
+    database
+    repositories

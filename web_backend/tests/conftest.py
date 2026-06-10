@@ -1,4 +1,9 @@
 import pytest
+import os
+
+# Set offline mode BEFORE importing main to bypass Redis checks during tests
+os.environ["OFFLINE_MODE"] = "True"
+
 from fastapi.testclient import TestClient
 from main import app
 from dependencies import get_current_user

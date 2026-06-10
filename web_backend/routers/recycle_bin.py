@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from dependencies import get_current_user, require_roles
-from repositories import patient_repo, user_repo, assessment_repo, report_repo
+from repositories.tenant_repo import TenantAwareRepository
 from typing import Any
+
+patient_repo = TenantAwareRepository("patient")
 
 # Only CLINICAL_ADMIN and up can access recycle bin actions
 router = APIRouter(

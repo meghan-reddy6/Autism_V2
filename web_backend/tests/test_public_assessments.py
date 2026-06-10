@@ -25,9 +25,9 @@ def override_validate_token(token: str):
 
 @pytest.fixture(autouse=True)
 def mock_dependencies_db():
-    with patch('database.db') as mock_db:
-        mock_db.assessmentsession.find_unique = AsyncMock(return_value=MockSession())
-        yield mock_db
+    with patch('repositories.base_repo.BaseRepository.find_unique', new_callable=AsyncMock) as mock_find:
+        mock_find.return_value = MockSession()
+        yield mock_find
 
 app.dependency_overrides[validate_assessment_token] = override_validate_token
 client = TestClient(app)
@@ -39,12 +39,12 @@ def test_get_assessment_form_valid(mock_dependencies_db):
     assert response.json()["templateName"] == "CARS"
 
 def test_get_assessment_form_invalid(mock_dependencies_db):
-    mock_dependencies_db.assessmentsession.find_unique = AsyncMock(return_value=None)
+    mock_dependencies_db.return_value = None
     response = client.get("/api/v1/public/assessment/invalid-token")
     assert response.status_code == 404
 
 def test_submit_responses(mock_dependencies_db):
-    with patch('routers.public_assessments.db') as mock_db:
+    with patch('routers.api.v1.public_assessments.db') as mock_db:
         mock_db.assessmentresponse.create = AsyncMock()
         mock_db.assessmentsession.update = AsyncMock()
         
