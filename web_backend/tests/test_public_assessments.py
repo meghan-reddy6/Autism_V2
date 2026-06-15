@@ -11,10 +11,7 @@ class MockSession:
     class MockPatient:
         firstName = "John"
     patient = MockPatient()
-    class MockTemplate:
-        name = "CARS"
-        formSchema = {}
-    template = MockTemplate()
+    scaleType = "CARS"
     expiresAt = None
 
 def override_validate_token(token: str):
@@ -25,7 +22,7 @@ def override_validate_token(token: str):
 
 @pytest.fixture(autouse=True)
 def mock_dependencies_db():
-    with patch('repositories.base_repo.BaseRepository.find_unique', new_callable=AsyncMock) as mock_find:
+    with patch('infrastructure.tenantAwareRepository.BaseRepository.find_unique', new_callable=AsyncMock) as mock_find:
         mock_find.return_value = MockSession()
         yield mock_find
 
@@ -37,6 +34,7 @@ def test_get_assessment_form_valid(mock_dependencies_db):
     assert response.status_code == 200
     assert response.json()["sessionId"] == "s1"
     assert response.json()["templateName"] == "CARS"
+    assert response.json()["schema"] is None
 
 def test_get_assessment_form_invalid(mock_dependencies_db):
     mock_dependencies_db.return_value = None
@@ -44,7 +42,7 @@ def test_get_assessment_form_invalid(mock_dependencies_db):
     assert response.status_code == 404
 
 def test_submit_responses(mock_dependencies_db):
-    with patch('routers.api.v1.public_assessments.db') as mock_db:
+    with patch('domains.patients.public_assessments.db') as mock_db:
         mock_db.assessmentresponse.create = AsyncMock()
         mock_db.assessmentsession.update = AsyncMock()
         

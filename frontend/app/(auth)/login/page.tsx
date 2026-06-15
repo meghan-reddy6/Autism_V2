@@ -6,8 +6,8 @@ import * as z from "zod"
 import { useRouter } from "next/navigation"
 
 import { useAuthStore } from "@/lib/store"
-import { Button } from "@/components/ui/Button"
-import { Card, CardContent } from "@/components/ui/Card"
+import { Button } from "@/shared/ui/Button"
+import { Card, CardContent } from "@/shared/ui/Card"
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),

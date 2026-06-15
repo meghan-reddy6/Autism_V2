@@ -1,9 +1,10 @@
 "use client"
 import * as React from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
-import { Badge } from "@/components/ui/Badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/Card"
+import { Badge } from "@/shared/ui/Badge"
 import { Activity, Users, FileText, AlertCircle } from "lucide-react"
 import { fetchApi } from "@/lib/api-client"
+import { formatDateTime } from "@/lib/tailwindClasses"
 
 export default function ClinicDashboard() {
   const [stats, setStats] = React.useState<any>({
@@ -88,7 +89,7 @@ export default function ClinicDashboard() {
                       <p className="text-sm text-slate-500">{activity.action}</p>
                     </div>
                     <div className="flex flex-col items-end space-y-2">
-                      <span className="text-xs text-slate-400">{activity.time}</span>
+                      <span className="text-xs text-slate-400">{formatDateTime(activity.time)}</span>
                       {activity.risk && (
                         <Badge variant={activity.risk === "High" ? "destructive" : "success"}>
                           {activity.risk} Risk

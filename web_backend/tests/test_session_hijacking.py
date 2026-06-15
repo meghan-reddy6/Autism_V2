@@ -26,7 +26,7 @@ async def test_session_hijacking_prevention():
     mock_usersession_actions.find_unique = AsyncMock(return_value=mock_session)
     mock_usersession_actions.update = AsyncMock()
     
-    with patch("routers.auth.db.usersession", new=mock_usersession_actions):
+    with patch("domains.auth.db.usersession", new=mock_usersession_actions):
         # Different IP Address
         response = client.post(
             "/api/v1/auth/refresh", 

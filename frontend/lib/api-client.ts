@@ -14,10 +14,23 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  let response;
+  try {
+    const fetchOptions = { ...options };
+    if (!fetchOptions.method || fetchOptions.method.toUpperCase() === 'GET') {
+      if (!fetchOptions.cache) {
+        fetchOptions.cache = 'no-store';
+      }
+    }
+    
+    response = await fetch(`${API_BASE}${endpoint}`, {
+      ...fetchOptions,
+      headers,
+    });
+  } catch (error) {
+    console.error("Network Error:", error);
+    throw new Error("Unable to connect to the server. Please check your internet connection or try again later.");
+  }
 
   if (response.status === 401) {
     // Auto-logout on unauthorized
@@ -28,17 +41,39 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
     throw new Error('Unauthorized');
   }
 
-  const data = await response.json();
+  let data;
+  try {
+    const text = await response.text();
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      data = { message: text || `HTTP Error ${response.status}` };
+    }
+  } catch (e) {
+    data = { message: "Failed to read response from server." };
+  }
 
   if (!response.ok) {
-    throw new Error(data.detail || data.message || 'API request failed');
+    let errorMessage = 'API request failed';
+    if (data.detail) {
+      if (typeof data.detail === 'string') {
+        errorMessage = data.detail;
+      } else if (Array.isArray(data.detail)) {
+        errorMessage = data.detail.map((e: any) => e.msg).join(', ');
+      } else {
+        errorMessage = JSON.stringify(data.detail);
+      }
+    } else if (data.message) {
+      errorMessage = data.message;
+    }
+    throw new Error(errorMessage);
   }
 
   return data;
 }
 
 export async function fetchAssessmentTemplate(token: string) {
-  return fetchApi(`/public/assessment/${token}`);
+  return fetchApi(`/public/assessment/${token}`, { cache: 'no-store' });
 }
 
 export async function submitAssessmentResponses(token: string, responses: any[]) {

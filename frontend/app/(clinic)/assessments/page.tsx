@@ -1,16 +1,17 @@
 "use client"
 import React from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
-import { Badge } from "@/components/ui/Badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/Card"
+import { Badge } from "@/shared/ui/Badge"
 import { fetchApi } from "@/lib/api-client"
 import { FileText, Search, Filter, Loader2, ArrowRight } from "lucide-react"
 import { useAuthStore } from "@/lib/store"
+import { formatDate } from "@/lib/tailwindClasses"
 
 export default function AllAssessmentsPage() {
   const router = useRouter()
   const { user } = useAuthStore()
-  const isDoctor = user?.role === "DOCTOR" || user?.role === "PSYCHOLOGIST" || user?.role === "CLINICAL_ADMIN" || user?.role === "SUPERVISOR" || user?.role === "SUPER_ADMIN"
+  const isDoctor = user?.role ? ["SUPER_ADMIN", "ORG_ADMIN", "DOCTOR"].includes(user.role) : false;
   const [assessments, setAssessments] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState("")
@@ -135,27 +136,42 @@ export default function AllAssessmentsPage() {
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="font-medium text-slate-900">{assessment.patient?.firstName} {assessment.patient?.lastName}</div>
-                      <div className="text-xs text-slate-500">DOB: {new Date(assessment.patient?.dateOfBirth).toLocaleDateString()}</div>
+                      <div className="text-xs text-slate-500">DOB: {formatDate(assessment.patient?.dateOfBirth)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                      {new Date(assessment.createdAt).toLocaleDateString()}
+                      {formatDate(assessment.createdAt)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-                        {assessment.template?.name || "Unknown Scale"}
+                        {assessment.scaleType || "Unknown Scale"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
-                      {assessment.reports?.[0] ? JSON.parse(assessment.reports[0].sections)?.totalScore : "-"}
+                      {(() => {
+                        if (!assessment.reports?.[0]) return "-";
+                        let sections = assessment.reports[0].sections;
+                        if (typeof sections === 'string') {
+                          try { sections = JSON.parse(sections); } catch(e) { sections = {}; }
+                        }
+                        return sections?.totalScore ?? "-";
+                      })()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {assessment.reports?.[0] ? (
-                        <span className={`text-sm font-bold text-${getRiskColor(JSON.parse(assessment.reports[0].sections)?.predictedRisk)}-600`}>
-                          {JSON.parse(assessment.reports[0].sections)?.predictedRisk}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-slate-400">Pending</span>
-                      )}
+                      {(() => {
+                        if (!assessment.reports?.[0]) {
+                          return <span className="text-sm text-slate-400">Pending</span>;
+                        }
+                        let sections = assessment.reports[0].sections;
+                        if (typeof sections === 'string') {
+                          try { sections = JSON.parse(sections); } catch(e) { sections = {}; }
+                        }
+                        const risk = sections?.predictedRisk;
+                        return (
+                          <span className={`text-sm font-bold text-${getRiskColor(risk)}-600`}>
+                            {risk || "Unknown"}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Badge variant={assessment.status === 'FINALIZED' ? 'default' : 'secondary'}>

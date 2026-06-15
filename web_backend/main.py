@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from core.context import current_ip_address
+from infrastructure.context import current_ip_address
 import logging
 from contextlib import asynccontextmanager
 import os
@@ -11,13 +11,14 @@ from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from redis import asyncio as aioredis
 
-from core.events import event_bus
-from services.cache_invalidation import subscribe_cache_invalidation_rules
-from core.middleware import SecurityHeadersMiddleware
+from infrastructure.events import event_bus
+from logic.cache_invalidation import subscribe_cache_invalidation_rules
+from infrastructure.middleware import SecurityHeadersMiddleware
 
 from database import db
-from routers import auth, assessment_inbox, assessment_templates, admin, super_admin, recycle_bin, mfa, reports, assessment_sessions
-from routers.api.v1 import dashboard, public_assessments, patients
+from domains import auth, dashboard, mfa
+from domains.patients import patients, assessment_sessions, public_assessments, reports
+from domains.admin import admin, super_admin, recycle_bin, team
 
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -95,18 +96,27 @@ app.add_middleware(IPCaptureMiddleware)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+import traceback
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    with open("debug_exceptions.log", "a") as f:
+        f.write(f"Exception on {request.url.path}:\n")
+        traceback.print_exc(file=f)
+    from fastapi.responses import JSONResponse
+    return JSONResponse(status_code=500, content={"message": "Internal Server Error Dumped", "detail": str(exc)})
+
 app.include_router(auth.router)
 app.include_router(patients.router)
-app.include_router(assessment_inbox.router)
+
 app.include_router(dashboard.router)
 app.include_router(assessment_sessions.router)
-app.include_router(assessment_templates.router)
 app.include_router(public_assessments.router)
 app.include_router(reports.router)
 app.include_router(admin.router)
 app.include_router(super_admin.router)
 app.include_router(recycle_bin.router)
 app.include_router(mfa.router)
+app.include_router(team.router)
 
 # Removed deprecated startup/shutdown events
 

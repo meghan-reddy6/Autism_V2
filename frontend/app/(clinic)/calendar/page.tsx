@@ -1,6 +1,6 @@
 "use client"
 import React from "react"
-import { Card, CardContent } from "@/components/ui/Card"
+import { Card, CardContent } from "@/shared/ui/Card"
 import { Construction } from "lucide-react"
 
 export default function PlaceholderPage() {

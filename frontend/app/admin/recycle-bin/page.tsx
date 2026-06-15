@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Trash2, RotateCcw, AlertTriangle } from "lucide-react";
 import { fetchApi } from "@/lib/api-client";
+import { formatDate } from "@/lib/tailwindClasses";
 
 export default function RecycleBinPage() {
   const [patients, setPatients] = useState<any[]>([]);
@@ -74,7 +75,7 @@ export default function RecycleBinPage() {
                   <td className="px-6 py-4 font-medium text-white">{p.firstName} {p.lastName}</td>
                   <td className="px-6 py-4 text-slate-400 font-mono text-sm">{p.mrn}</td>
                   <td className="px-6 py-4 text-slate-400">
-                    {p.deletedAt ? new Date(p.deletedAt).toLocaleDateString() : "Unknown"}
+                    {p.deletedAt ? formatDate(p.deletedAt) : "Unknown"}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button 

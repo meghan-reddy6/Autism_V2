@@ -9,7 +9,7 @@ from slowapi.util import get_remote_address
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from core.context import current_tenant_id, current_user_id, current_user_role
+from infrastructure.context import current_tenant_id, current_user_id, current_user_role
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -39,7 +39,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 async def get_current_user(token: str = Depends(oauth2_scheme), request: Request = None):
-    from repositories import user_repo
+    from infrastructure.tenantAwareRepository import user_repo
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -59,7 +59,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme), request: Request
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub")
         jti = payload.get("jti")
-        if user_id is None or jti is None:
+        tenant_id = payload.get("tenantId")
+        if user_id is None or jti is None or tenant_id is None:
             raise credentials_exception
             
         # Check Redis Blocklist
@@ -77,7 +78,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), request: Request
             logger.warning(f"Invalid token access attempt to {request.url.path}")
         raise credentials_exception
         
-    user = await user_repo.find_unique(where={"id": user_id})
+    user = await user_repo.find_unique(tenant_id=tenant_id, where={"id": user_id})
     if user is None:
         raise credentials_exception
     if not user.isActive:
@@ -94,14 +95,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme), request: Request
 
 ROLE_HIERARCHY = {
     "SUPER_ADMIN": 100,
-    "PLATFORM_ADMIN": 90,
-    "TENANT_ADMIN": 80,
-    "CLINICAL_ADMIN": 70,
-    "SUPERVISOR": 60,
-    "THERAPIST": 50,
-    "ASSESSOR": 40,
-    "DATA_ENTRY": 30,
-    "VIEWER": 20
+    "ORG_ADMIN": 80,
+    "DOCTOR": 50,
+    "RECEPTIONIST": 20
 }
 
 def require_roles(minimum_role_or_roles):
@@ -115,17 +111,7 @@ def require_roles(minimum_role_or_roles):
         user_level = ROLE_HIERARCHY.get(user_role_str, 0)
         
         if isinstance(minimum_role_or_roles, list):
-            # Support legacy exact match lists during transition
             allowed = minimum_role_or_roles
-            # Also map old roles to new just in case
-            legacy_map = {
-                "DOCTOR": "CLINICAL_ADMIN",
-                "CLINIC_ADMIN": "TENANT_ADMIN",
-                "PSYCHOLOGIST": "SUPERVISOR",
-                "RECEPTIONIST": "DATA_ENTRY",
-                "PATIENT_PARENT": "VIEWER"
-            }
-            allowed = [legacy_map.get(r, r) for r in allowed]
             if user_role_str not in allowed and user_level < ROLE_HIERARCHY["SUPER_ADMIN"]:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -147,7 +133,7 @@ async def validate_assessment_token(token: str):
     from database import db
     session = await db.assessmentsession.find_unique(
         where={"token": token},
-        include={"template": True, "patient": True}
+        include={"patient": True}
     )
     if not session:
         raise HTTPException(status_code=404, detail="Invalid or expired token")

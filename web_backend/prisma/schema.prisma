@@ -11,42 +11,46 @@ generator client {
 // ---------------------------------------------------------
 // CORE MULTI-TENANT & RBAC
 // ---------------------------------------------------------
-model Tenant {
+model Organization {
   id               String   @id @default(uuid())
   name             String
   npiNumber        String?  // National Provider Identifier
   address          String?
   contactEmail     String?
-  subscriptionTier String   @default("ENTERPRISE")
+  subscriptionPlan String   @default("ENTERPRISE")
   status           String   @default("ACTIVE") // ACTIVE, SUSPENDED, ARCHIVED
   maxUsers         Int      @default(500)
   maxStorageGB     Int      @default(100)
   maxAssessments   Int      @default(100000)
   featureFlags     Json?    // e.g., ["analytics", "audit_logs", "ai_reports"]
   createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
   
   deletedAt        DateTime?
   deletedBy        String?
   isDeleted        Boolean  @default(false)
 
-  users        User[]
-  patients     Patient[]
-  appointments Appointment[]
-  auditLogs    AuditLog[]
-  assessmentSessions AssessmentSession[]
-  assessmentTemplates AssessmentTemplate[]
+  users                User[]
+  patients             Patient[]
+  appointments         Appointment[]
+  auditLogs            AuditLog[]
+  assessmentSessions   AssessmentSession[]
+  userSessions         UserSession[]
+  reports              Report[]
+  clinicalNotes        ClinicalNote[]
+  treatmentPlans       TreatmentPlan[]
+  consents             Consent[]
+  documents            Document[]
+  assessmentResponses  AssessmentResponse[]
+  reportSections       ReportSection[]
+  assessments          Assessment[]
 }
 
 enum Role {
   SUPER_ADMIN
-  PLATFORM_ADMIN
-  TENANT_ADMIN
-  CLINICAL_ADMIN
-  SUPERVISOR
-  THERAPIST
-  ASSESSOR
-  DATA_ENTRY
-  VIEWER
+  ORG_ADMIN
+  DOCTOR
+  RECEPTIONIST
 }
 
 model User {
@@ -61,6 +65,8 @@ model User {
   isActive     Boolean  @default(true)
   suspendedAt  DateTime?
   lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   
   deletedAt    DateTime?
   deletedBy    String?
@@ -72,7 +78,7 @@ model User {
   failedLoginAttempts Int      @default(0)
   lockedUntil         DateTime?
 
-  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  tenant       Organization @relation(fields: [tenantId], references: [id])
   sessions     UserSession[]
   auditLogs    AuditLog[]
   appointments Appointment[] @relation("ProviderAppointments")
@@ -81,18 +87,26 @@ model User {
   reviewedSessions AssessmentSession[] @relation("SessionReviewer")
   approvedSessions AssessmentSession[] @relation("SessionApprover")
   approvedReports  Report[] @relation("ReportApprover")
+  assignedPatients Patient[] @relation("AssignedDoctor")
 }
 
 model UserSession {
   id           String   @id @default(uuid())
+  tenantId     String
   userId       String
   refreshToken String   @unique
   ipAddress    String?
   userAgent    String?
   isRevoked    Boolean  @default(false)
   createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   expiresAt    DateTime
+  
+  deletedAt    DateTime?
+  deletedBy    String?
+  isDeleted    Boolean  @default(false)
 
+  tenant       Organization @relation(fields: [tenantId], references: [id])
   user         User     @relation(fields: [userId], references: [id])
 }
 
@@ -102,6 +116,7 @@ model UserSession {
 model Patient {
   id               String   @id @default(uuid())
   tenantId         String
+  assignedDoctorId String?
   mrn              String   @unique // Medical Record Number
   firstName        String
   lastName         String
@@ -131,7 +146,9 @@ model Patient {
   deletedBy        String?
   isDeleted        Boolean  @default(false)
 
-  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+  tenant           Organization @relation(fields: [tenantId], references: [id])
+  assignedDoctor   User?    @relation("AssignedDoctor", fields: [assignedDoctorId], references: [id])
+  
   assessments      Assessment[]
   appointments     Appointment[]
   clinicalNotes    ClinicalNote[]
@@ -153,12 +170,19 @@ model Appointment {
   durationMins Int      @default(60)
   status       String   @default("SCHEDULED") // COMPLETED, CANCELLED, NO_SHOW
   type         String   // INTAKE, FOLLOW_UP, THERAPY
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  deletedAt    DateTime?
+  deletedBy    String?
+  isDeleted    Boolean  @default(false)
 
-  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  tenant       Organization @relation(fields: [tenantId], references: [id])
   patient      Patient  @relation(fields: [patientId], references: [id])
   provider     User     @relation("ProviderAppointments", fields: [providerId], references: [id])
 }
 
+// Legacy Assessment Model
 model Assessment {
   id             String   @id @default(uuid())
   tenantId       String
@@ -181,16 +205,19 @@ model Assessment {
   
   status         String   @default("DRAFT") // FINALIZED
   createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   
   deletedAt      DateTime?
   deletedBy      String?
   isDeleted      Boolean  @default(false)
 
+  tenant         Organization @relation(fields: [tenantId], references: [id])
   patient        Patient  @relation(fields: [patientId], references: [id])
 }
 
 model ClinicalNote {
   id           String   @id @default(uuid())
+  tenantId     String
   patientId    String
   authorId     String
   
@@ -201,20 +228,33 @@ model ClinicalNote {
   plan         String?
   
   createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   isSigned     Boolean  @default(false)
+  
+  deletedAt    DateTime?
+  deletedBy    String?
+  isDeleted    Boolean  @default(false)
 
+  tenant       Organization @relation(fields: [tenantId], references: [id])
   patient      Patient  @relation(fields: [patientId], references: [id])
   author       User     @relation(fields: [authorId], references: [id])
 }
 
 model TreatmentPlan {
   id           String   @id @default(uuid())
+  tenantId     String
   patientId    String
   goals        Json     // List of therapeutic goals
   interventions Json    // CDSS recommended interventions
   status       String   @default("ACTIVE")
   createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  deletedAt    DateTime?
+  deletedBy    String?
+  isDeleted    Boolean  @default(false)
 
+  tenant       Organization @relation(fields: [tenantId], references: [id])
   patient      Patient  @relation(fields: [patientId], references: [id])
 }
 
@@ -233,28 +273,50 @@ model AuditLog {
   changes      Json?
   timestamp    DateTime @default(now())
   ipAddress    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  deletedAt    DateTime?
+  deletedBy    String?
+  isDeleted    Boolean  @default(false)
 
-  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  tenant       Organization @relation(fields: [tenantId], references: [id])
   user         User     @relation(fields: [userId], references: [id])
 }
 
 model Consent {
   id           String   @id @default(uuid())
+  tenantId     String
   patientId    String
   documentType String   // HIPAA, TREATMENT_CONSENT
   signedAt     DateTime @default(now())
   signatureUrl String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   
+  deletedAt    DateTime?
+  deletedBy    String?
+  isDeleted    Boolean  @default(false)
+
+  tenant       Organization @relation(fields: [tenantId], references: [id])
   patient      Patient  @relation(fields: [patientId], references: [id])
 }
 
 model Document {
   id           String   @id @default(uuid())
+  tenantId     String
   patientId    String
   fileType     String   // PDF, JPG
   s3Url        String   // Encrypted storage reference
   uploadedAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  deletedAt    DateTime?
+  deletedBy    String?
+  isDeleted    Boolean  @default(false)
 
+  tenant       Organization @relation(fields: [tenantId], references: [id])
   patient      Patient  @relation(fields: [patientId], references: [id])
 }
 
@@ -266,8 +328,9 @@ model AssessmentSession {
   token                String   @unique @default(uuid())
   tenantId             String
   patientId            String
-  assessmentTemplateId String
-  status               String   @default("CREATED") // CREATED, SENT, IN_PROGRESS, SUBMITTED, UNDER_REVIEW, APPROVED, ARCHIVED, EXPIRED, CANCELLED
+  scaleType            String
+  version              String   @default("1.0")
+  status               String   @default("CREATED") // CREATED, SENT, IN_PROGRESS, SUBMITTED, UNDER_REVIEW, APPROVED, ARCHIVED, EXPIRED, CANCELLED, REJECTED
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
   expiresAt            DateTime?
@@ -280,9 +343,8 @@ model AssessmentSession {
   deletedBy            String?
   isDeleted            Boolean  @default(false)
 
-  tenant               Tenant             @relation(fields: [tenantId], references: [id])
+  tenant               Organization       @relation(fields: [tenantId], references: [id])
   patient              Patient            @relation(fields: [patientId], references: [id])
-  template             AssessmentTemplate @relation(fields: [assessmentTemplateId], references: [id])
   creator              User               @relation("SessionCreator", fields: [createdBy], references: [id])
   reviewer             User?              @relation("SessionReviewer", fields: [reviewedBy], references: [id])
   approver             User?              @relation("SessionApprover", fields: [approvedBy], references: [id])
@@ -290,35 +352,31 @@ model AssessmentSession {
   reports              Report[]
 }
 
-model AssessmentTemplate {
-  id           String   @id @default(uuid())
-  tenantId     String?  // Null means global template
-  name         String
-  description  String?
-  type         String   // M-CHAT-R, CARS, INTAKE, etc.
-  formSchema   Json     @map("schema")
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
 
-  tenant       Tenant?  @relation(fields: [tenantId], references: [id])
-  sessions     AssessmentSession[]
-}
 
 model AssessmentResponse {
   id                  String   @id @default(uuid())
+  tenantId            String
   assessmentSessionId String
   fieldName           String
   value               Json     // Can be string, number, array, etc.
   metadata            Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  deletedAt           DateTime?
+  deletedBy           String?
+  isDeleted           Boolean  @default(false)
 
+  tenant              Organization      @relation(fields: [tenantId], references: [id])
   session             AssessmentSession @relation(fields: [assessmentSessionId], references: [id])
 }
 
 model Report {
   id                  String   @id @default(uuid())
+  tenantId            String
   assessmentSessionId String
-  status              String   @default("DRAFT") // DRAFT, AI_GENERATED, PENDING_REVIEW, APPROVED, ARCHIVED
+  status              String   @default("DRAFT") // DRAFT, AI_GENERATED, PENDING_REVIEW, APPROVED, REJECTED, ARCHIVED
   sections            Json?    // Optional JSON representation if structured, otherwise use ReportSection
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
@@ -329,17 +387,26 @@ model Report {
   deletedBy           String?
   isDeleted           Boolean  @default(false)
 
+  tenant              Organization      @relation(fields: [tenantId], references: [id])
   session             AssessmentSession @relation(fields: [assessmentSessionId], references: [id])
   approver            User?             @relation("ReportApprover", fields: [approvedBy], references: [id])
   reportSections      ReportSection[]
 }
 
 model ReportSection {
-  id       String @id @default(uuid())
+  id       String   @id @default(uuid())
+  tenantId String
   reportId String
   name     String
   content  String
-  order    Int    @default(0)
+  order    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  deletedAt DateTime?
+  deletedBy String?
+  isDeleted Boolean  @default(false)
 
-  report   Report @relation(fields: [reportId], references: [id])
+  tenant   Organization @relation(fields: [tenantId], references: [id])
+  report   Report       @relation(fields: [reportId], references: [id])
 }

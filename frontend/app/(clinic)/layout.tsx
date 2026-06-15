@@ -2,9 +2,9 @@
 import React from "react"
 import Link from "next/link"
 import { Activity, Users, Settings, FileText, Calendar, LogOut } from "lucide-react"
-import AuthGuard from "@/components/AuthGuard"
-import { ClinicalGuard } from "@/components/ClinicalGuard"
-import LogoutButton from "@/components/LogoutButton"
+import AuthGuard from "@/features/auth/components/AuthGuard"
+import { ClinicalGuard } from "@/features/auth/components/ClinicalGuard"
+import LogoutButton from "@/features/auth/components/LogoutButton"
 import { useAuthStore } from "@/lib/store"
 
 export default function ClinicLayout({
@@ -13,7 +13,7 @@ export default function ClinicLayout({
   children: React.ReactNode
 }) {
   const { user } = useAuthStore()
-  const isDoctor = user?.role === "DOCTOR" || user?.role === "PSYCHOLOGIST" || user?.role === "CLINICAL_ADMIN" || user?.role === "SUPERVISOR" || user?.role === "SUPER_ADMIN"
+  const isDoctor = user?.role ? ["SUPER_ADMIN", "ORG_ADMIN", "DOCTOR"].includes(user.role) : false;
 
   return (
     <AuthGuard>
@@ -36,6 +36,9 @@ export default function ClinicLayout({
               <p className="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">System</p>
             </div>
             <NavItem href="/settings" icon={<Settings />} label="Settings" />
+            {["ORG_ADMIN", "SUPER_ADMIN"].includes(user?.role as string) && (
+              <NavItem href="/team" icon={<Users />} label="Team Management" />
+            )}
 
             {user?.role === "SUPER_ADMIN" && (
               <>

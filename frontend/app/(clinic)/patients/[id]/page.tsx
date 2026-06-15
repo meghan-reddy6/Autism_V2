@@ -1,22 +1,13 @@
 "use client"
 import * as React from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
-import { Badge } from "@/components/ui/Badge"
-import { Button } from "@/components/ui/Button"
-import { CDSSModal } from "@/components/clinical/CDSSModal"
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/Card"
+import { Badge } from "@/shared/ui/Badge"
+import { Button } from "@/shared/ui/Button"
+import { CDSSModal } from "@/features/patients/components/CDSSModal"
 import { FileText, Calendar, Activity, Clock, Plus } from "lucide-react"
 import { fetchApi } from "@/lib/api-client"
 
-function formatDateUTC(dateString: string) {
-  if (!dateString) return "N/A";
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', { 
-    timeZone: 'UTC',
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
-  }).format(date);
-}
+import { formatDate, formatDateTime } from "@/lib/tailwindClasses"
 
 export default function PatientView({ params }: { params: { id: string } }) {
   const [activeTab, setActiveTab] = React.useState("assessments")
@@ -69,7 +60,7 @@ export default function PatientView({ params }: { params: { id: string } }) {
             <div className="flex items-center space-x-3 mt-1 text-sm text-slate-500 font-medium">
               <span>{patient.mrn}</span>
               <span>&bull;</span>
-              <span>{patient.age} ({formatDateUTC(patient.dateOfBirth)})</span>
+              <span>{patient.age} ({formatDate(patient.dateOfBirth)})</span>
               <span>&bull;</span>
               <span>{patient.gender}</span>
             </div>
@@ -152,7 +143,7 @@ export default function PatientView({ params }: { params: { id: string } }) {
                         </div>
                         <div>
                           <h4 className="font-bold text-slate-900">{assessment.scaleType} Assessment</h4>
-                          <p className="text-sm text-slate-500 mt-0.5">{formatDateUTC(assessment.createdAt)} &bull; Score: {assessment.totalScore}</p>
+                          <p className="text-sm text-slate-500 mt-0.5">{formatDateTime(assessment.createdAt)} &bull; Score: {assessment.totalScore}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-4">

@@ -1,7 +1,7 @@
 import pytest
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
-from core.events import RedisEventBus, DomainEvent
+from infrastructure.events import RedisEventBus, DomainEvent
 
 @pytest.mark.asyncio
 async def test_redis_streams_publish_and_consume():

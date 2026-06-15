@@ -32,17 +32,17 @@ environments:
             password: Admin@123
             firstName: Gregory
             lastName: House
-            role: CLINICAL_ADMIN
+            role: ORG_ADMIN
           - email: provider@clinic.com
             password: Admin@123
             firstName: Allison
             lastName: Cameron
-            role: THERAPIST
+            role: DOCTOR
           - email: parent@portal.com
             password: Admin@123
             firstName: Sarah
             lastName: Williams
-            role: VIEWER
+            role: RECEPTIONIST
 
 assessment_templates:
   - M-CHAT-R

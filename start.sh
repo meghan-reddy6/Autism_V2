@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "Starting Clinical Assessment Portal..."
-docker-compose up -d --build
+docker-compose up -d
 
 echo "Waiting for database to initialize and containers to start..."
 sleep 10

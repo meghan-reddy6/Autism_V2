@@ -10,7 +10,7 @@ from dependencies import get_current_user
 
 # Mock User Object
 class MockUser:
-    def __init__(self, role="CLINICAL_ADMIN", tenantId="test-tenant-1", id="test-user-1"):
+    def __init__(self, role="ORG_ADMIN", tenantId="test-tenant-1", id="test-user-1"):
         self.role = role
         self.tenantId = tenantId
         self.id = id

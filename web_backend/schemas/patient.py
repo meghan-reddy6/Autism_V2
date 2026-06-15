@@ -13,6 +13,7 @@ class PatientCreate(BaseModel):
     emergencyContact: Optional[str] = None
     address: Optional[str] = None
     referringPhysician: Optional[str] = None
+    assignedDoctorId: Optional[str] = None
 
 class PatientSummaryResponse(BaseModel):
     id: str
@@ -22,5 +23,6 @@ class PatientSummaryResponse(BaseModel):
     dateOfBirth: datetime
     gender: str
     clinicalNotesCount: int = 0
+    assignedDoctorId: Optional[str] = None
     # Allow extra fields for dynamic mapping
     model_config = ConfigDict(extra='allow')

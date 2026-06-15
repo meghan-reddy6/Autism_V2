@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchApi } from "@/lib/api-client";
 import { Building2, Plus, Users, Search, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { formatDate } from "@/lib/tailwindClasses";
 
 export default function OrganizationsPage() {
   const [orgs, setOrgs] = useState<any[]>([]);
@@ -167,7 +168,7 @@ export default function OrganizationsPage() {
                     {org._count?.patients || 0}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                    {new Date(org.createdAt).toLocaleDateString()}
+                    {formatDate(org.createdAt)}
                   </td>
                 </tr>
               ))}

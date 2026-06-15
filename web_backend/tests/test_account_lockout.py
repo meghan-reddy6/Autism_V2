@@ -22,7 +22,7 @@ async def test_account_lockout():
     mock_user_actions = MagicMock()
     mock_user_actions.find_unique = AsyncMock(return_value=mock_user)
     
-    with patch("routers.auth.db.user", new=mock_user_actions):
+    with patch("domains.auth.db.user", new=mock_user_actions):
         response = client.post("/api/v1/auth/login", data={"username": "test@test.com", "password": "password"})
         
         # Should be forbidden because account is locked

@@ -1,9 +1,9 @@
 import pytest
 from unittest.mock import patch
-from services.cache_telemetry import cache_metrics
+from logic.cache_telemetry import cache_metrics
 
 def test_cache_telemetry_methods():
-    with patch("services.cache_telemetry.logger.info") as mock_info:
+    with patch("logic.cache_telemetry.logger.info") as mock_info:
         # Test Stale Read
         cache_metrics.log_stale_read("key1", 50000, 60000)
         mock_info.assert_called_once()

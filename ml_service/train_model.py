@@ -34,10 +34,16 @@ def generate_synthetic_data(num_samples=1000):
     for _ in range(num_samples):
         score = np.random.randint(0, 20)
         age = np.random.randint(16, 30) # 16-30 months
-        # Threshold: score >= 3 is Elevated
-        target = "Elevated Statistical Observation" if score >= 3 else "Standard Statistical Observation"
+        # Thresholds per scoring_thresholds.yaml
+        if score >= 8:
+            target = "Elevated Statistical Observation"
+        elif score >= 3:
+            target = "Moderate Statistical Observation"
+        else:
+            target = "Standard Statistical Observation"
+            
         if np.random.rand() < 0.05:
-             target = "Standard Statistical Observation" if target == "Elevated Statistical Observation" else "Elevated Statistical Observation"
+            target = np.random.choice(["Standard Statistical Observation", "Moderate Statistical Observation", "Elevated Statistical Observation"])
         data.append(["M-CHAT-R", score, age, target])
 
     df = pd.DataFrame(data, columns=["scale_type", "normalized_score", "age_months", "observation"])

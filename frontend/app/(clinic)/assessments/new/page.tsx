@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { fetchApi } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/store";
 import { User, Activity, BrainCircuit, FileText, CheckCircle2, Copy, ExternalLink } from "lucide-react";
+import { ASSESSMENT_FORMS } from "@/lib/assessment-forms";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -15,40 +16,49 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+const scaleTypes = Object.keys(ASSESSMENT_FORMS) as [string, ...string[]];
 const assessmentSchema = z.object({
-  scaleType: z.enum(["CARS", "GARS-2", "M-CHAT-R"], { required_error: "Please select an assessment scale" }),
+  scaleType: z.enum(scaleTypes, { required_error: "Please select an assessment scale" }),
   
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  dateOfBirth: z.string().min(1, "Date of birth is required"),
+  dateOfBirth: z.string()
+    .min(1, "Date of birth is required")
+    .refine((val) => {
+      const date = new Date(val);
+      return !isNaN(date.getTime()) && date <= new Date() && date.getFullYear() >= 1900;
+    }, "Please enter a valid past date"),
   gender: z.enum(["Male", "Female", "Other", "Prefer not to say"], { required_error: "Please select a gender" }),
   parentName: z.string().optional(),
   parentEmail: z.string().email("Invalid email").optional().or(z.literal('')),
-  contactNumber: z.string().optional(),
+  contactNumber: z.string()
+    .regex(/^[0-9+\-()\s]*$/, "Invalid contact number format")
+    .refine(val => !val || val.replace(/[^0-9]/g, '').length >= 7, {
+      message: "Contact number must contain at least 7 digits"
+    })
+    .optional()
+    .or(z.literal('')),
+  assignedDoctorId: z.string().optional(),
 });
 
 type AssessmentData = z.infer<typeof assessmentSchema>;
 
-const SCALES = {
-  "CARS": {
-    name: "CARS",
-    description: "Childhood Autism Rating Scale (15 Items). Clinical observation protocol."
-  },
-  "GARS-2": {
-    name: "GARS-2",
-    description: "Gilliam Autism Rating Scale (41 Items). Frequency-based observation protocol."
-  },
-  "M-CHAT-R": {
-    name: "M-CHAT-R",
-    description: "Modified Checklist for Autism in Toddlers (20 Items). Parent-report questionnaire."
-  }
-};
 
 export default function NewAssessmentSession() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [createdSession, setCreatedSession] = useState<{id: string, token: string} | null>(null);
+  const { user } = useAuthStore();
+  const [doctors, setDoctors] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user?.role === "ORG_ADMIN" || user?.role === "SUPER_ADMIN" || user?.role === "RECEPTIONIST") {
+      fetchApi("/team").then(data => {
+        setDoctors(data.filter((m: any) => m.role === "DOCTOR"));
+      }).catch(err => console.error(err));
+    }
+  }, [user]);
 
   const {
     register,
@@ -60,7 +70,7 @@ export default function NewAssessmentSession() {
     resolver: zodResolver(assessmentSchema)
   });
 
-  const selectedScaleKey = watch("scaleType") as keyof typeof SCALES;
+  const selectedScaleKey = watch("scaleType");
 
   const onSubmit = async (data: AssessmentData) => {
     setIsSubmitting(true);
@@ -78,6 +88,7 @@ export default function NewAssessmentSession() {
           guardianName: data.parentName,
           guardianEmail: data.parentEmail || undefined,
           guardianPhone: data.contactNumber,
+          assignedDoctorId: data.assignedDoctorId || undefined,
         }),
       });
 
@@ -179,7 +190,7 @@ export default function NewAssessmentSession() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700">Date of Birth</label>
-                  <input type="date" {...register("dateOfBirth")} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+                  <input type="date" min="1900-01-01" max={new Date().toISOString().split("T")[0]} {...register("dateOfBirth")} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
                   {errors.dateOfBirth && <p className="text-red-500 text-xs">{errors.dateOfBirth.message}</p>}
                 </div>
                 <div className="space-y-2">
@@ -204,8 +215,20 @@ export default function NewAssessmentSession() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700">Contact Number (Optional)</label>
-                  <input type="tel" {...register("contactNumber")} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+                  <input type="tel" {...register("contactNumber")} placeholder="+1 (555) 000-0000" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+                  {errors.contactNumber && <p className="text-red-500 text-xs">{errors.contactNumber.message}</p>}
                 </div>
+                {(user?.role === "ORG_ADMIN" || user?.role === "SUPER_ADMIN" || user?.role === "RECEPTIONIST") && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">Assign to Doctor (Optional)</label>
+                    <select {...register("assignedDoctorId")} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none">
+                      <option value="">Unassigned</option>
+                      {doctors.map(d => (
+                        <option key={d.id} value={d.id}>Dr. {d.firstName} {d.lastName}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -215,7 +238,7 @@ export default function NewAssessmentSession() {
                 <FileText className="mr-2 h-5 w-5 text-slate-400" /> Assessment Protocol
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {Object.entries(SCALES).map(([key, scale]) => (
+                {Object.entries(ASSESSMENT_FORMS).map(([key, scale]) => (
                   <button
                     type="button"
                     key={key}
@@ -226,7 +249,7 @@ export default function NewAssessmentSession() {
                     )}
                   >
                     <span className={cn("text-base font-semibold mb-1", selectedScaleKey === key ? "text-blue-900" : "text-slate-900")}>
-                      {scale.name}
+                      {scale.title}
                     </span>
                     <span className="text-xs text-slate-500">{scale.description}</span>
                   </button>

@@ -59,8 +59,8 @@ async def analyze_score(request: InferenceRequest):
             observation = "High" if request.normalized_score >= 30 else "Low"
         elif request.scale_type == "GARS-2":
             observation = "High" if request.normalized_score >= 50 else "Low"
-        else:
-            observation = "High" if request.normalized_score >= 3 else "Low"
+        else: # M-CHAT-R
+            observation = "High" if request.normalized_score >= 8 else ("Moderate" if request.normalized_score >= 3 else "Low")
             
         return {
             "risk_level": observation,
@@ -86,7 +86,12 @@ async def analyze_score(request: InferenceRequest):
     # Predict
     prediction_raw = model.predict(df)[0]
     # Map raw prediction to Risk Levels
-    risk_level = "High" if "Elevated" in prediction_raw else "Low"
+    if "Elevated" in prediction_raw:
+        risk_level = "High"
+    elif "Moderate" in prediction_raw:
+        risk_level = "Moderate"
+    else:
+        risk_level = "Low"
     
     # Get confidence (probability of predicted class)
     probabilities = model.predict_proba(df)[0]

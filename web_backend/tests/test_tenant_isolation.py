@@ -11,17 +11,17 @@ class MockUser:
         self.isActive = True
 
 async def mock_get_current_user():
-    from core.context import current_tenant_id, current_user_role
+    from infrastructure.context import current_tenant_id, current_user_role
     current_tenant_id.set("tenant-A")
-    current_user_role.set("CLINICAL_ADMIN")
-    return MockUser(role="CLINICAL_ADMIN", tenantId="tenant-A")
+    current_user_role.set("ORG_ADMIN")
+    return MockUser(role="ORG_ADMIN", tenantId="tenant-A")
 
 def test_tenant_isolation_get_patient():
     from dependencies import get_current_user
     app.dependency_overrides[get_current_user] = mock_get_current_user
     client = TestClient(app)
     
-    with patch('repositories.base_repo.BaseRepository.find_first', new_callable=AsyncMock) as mock_find_first:
+    with patch('infrastructure.tenantAwareRepository.BaseRepository.find_first', new_callable=AsyncMock) as mock_find_first:
         
         # Mocking the case where patient belongs to tenant-A
         class MockPatient:
@@ -36,7 +36,7 @@ def test_tenant_isolation_get_patient():
                 return {"id": self.id, "tenantId": self.tenantId, "mrn": self.mrn, "firstName": self.firstName, "lastName": self.lastName, "dateOfBirth": self.dateOfBirth, "gender": self.gender}
         mock_find_first.return_value = MockPatient()
         
-        with patch('routers.api.v1.patients.log_audit') as mock_audit:
+        with patch('domains.patients.patients.log_audit') as mock_audit:
             mock_audit.return_value = None
             response = client.get("/api/v1/patients/p1")
             

@@ -33,7 +33,7 @@ async def test_jwt_blocklist_enforcement():
     mock_user_actions = MagicMock()
     mock_user_actions.find_unique = AsyncMock(return_value=mock_user)
     
-    with patch("repositories.user_repo.find_unique", new_callable=AsyncMock) as mock_find_unique:
+    with patch("infrastructure.tenantAwareRepository.user_repo.find_unique", new_callable=AsyncMock) as mock_find_unique:
         mock_find_unique.return_value = mock_user
         with patch("fastapi_cache.FastAPICache.get_backend", new_callable=MagicMock) as mock_get_backend:
             mock_backend = AsyncMock()
