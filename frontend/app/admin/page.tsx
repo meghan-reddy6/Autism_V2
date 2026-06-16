@@ -1,27 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { fetchApi } from "@/lib/api-client";
 import { Users, Building2, FileText, Activity, AlertCircle, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    async function loadStats() {
-      try {
-        const data = await fetchApi("/admin/analytics");
-        setStats(data);
-      } catch (err: any) {
-        setError(err.message || "Failed to load admin analytics");
-      } finally {
-        setLoading(false);
-      }
+  const { data: stats, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['adminAnalytics'],
+    queryFn: async () => {
+      return fetchApi("/admin/analytics");
     }
-    loadStats();
-  }, []);
+  });
+
+  const error = queryError ? (queryError as Error).message : "";
 
   if (loading) {
     return (

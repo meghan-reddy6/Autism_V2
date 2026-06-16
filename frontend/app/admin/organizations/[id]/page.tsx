@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { fetchApi } from "@/lib/api-client";
 import { ArrowLeft, Building2, Users, FileText, HardDrive, Activity, CheckCircle2, ShieldAlert, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 function formatTimeAgo(dateString: string) {
   const date = new Date(dateString);
@@ -22,23 +22,16 @@ function formatTimeAgo(dateString: string) {
 export default function OrganizationDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const [org, setOrg] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function loadOrg() {
-      try {
-        const data = await fetchApi(`/admin/organizations/${params.id}`);
-        setOrg(data);
-      } catch (err: any) {
-        setError(err.message || "Failed to load organization details");
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadOrg();
-  }, [params.id]);
+  const { data: org, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['adminOrganizationDetails', params.id],
+    queryFn: async () => {
+      return fetchApi(`/admin/organizations/${params.id}`);
+    },
+    enabled: !!params.id
+  });
+
+  const error = queryError ? (queryError as Error).message : "";
 
   if (loading) {
     return (

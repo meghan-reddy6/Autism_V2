@@ -1,96 +1,113 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { fetchApi } from "@/lib/api-client";
 import { Users, Loader2, ShieldAlert } from "lucide-react";
 import { UserTable } from "@/components/shared/UserTable";
 import { UserModal } from "@/components/shared/UserModal";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function GlobalUsersPage() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newUser, setNewUser] = useState({ email: "", password: "", firstName: "", lastName: "", role: "ORG_ADMIN", tenantId: "" });
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
-  const [isEditSubmitting, setIsEditSubmitting] = useState(false);
-  const [tenants, setTenants] = useState<any[]>([]);
-  const [roles, setRoles] = useState<string[]>([]);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  useEffect(() => { loadUsers(); }, []);
-
-  async function loadUsers() {
-    try {
+  const { data, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['adminUsersData'],
+    queryFn: async () => {
       const [usersData, orgsData, rolesData] = await Promise.all([
         fetchApi("/admin/users"), fetchApi("/admin/organizations"), fetchApi("/admin/roles")
       ]);
-      setUsers(usersData);
-      setTenants(orgsData);
-      setRoles(rolesData.roles);
-      if (orgsData.length > 0) setNewUser(prev => ({ ...prev, tenantId: orgsData[0].id }));
-    } catch (err: any) {
-      setError(err.message || "Failed to load users data");
-    } finally {
-      setLoading(false);
+      return { users: usersData, tenants: orgsData, roles: rolesData.roles };
     }
-  }
+  });
 
-  const handleEditUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingUser) return;
-    setIsEditSubmitting(true);
-    try {
-      await fetchApi(`/admin/users/${editingUser.id}`, {
+  const users = data?.users || [];
+  const tenants = data?.tenants || [];
+  const roles = data?.roles || [];
+
+  // Update new user default tenant if tenants load
+  useEffect(() => {
+    if (tenants.length > 0 && !newUser.tenantId) {
+      setNewUser(prev => ({ ...prev, tenantId: tenants[0].id }));
+    }
+  }, [tenants, newUser.tenantId]);
+
+  const editUserMutation = useMutation({
+    mutationFn: async (updatedUser: any) => {
+      await fetchApi(`/admin/users/${updatedUser.id}`, {
         method: "PATCH",
         body: JSON.stringify({
-          firstName: editingUser.firstName,
-          lastName: editingUser.lastName,
-          email: editingUser.email,
-          role: editingUser.role,
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+          email: updatedUser.email,
+          role: updatedUser.role,
         })
       });
-      await loadUsers();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsersData'] });
       setEditingUser(null);
-    } catch (err: any) { alert(err.message || "Failed to update user"); }
-    finally { setIsEditSubmitting(false); }
-  };
+    },
+    onError: (err: any) => alert(err.message || "Failed to update user")
+  });
 
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      await fetchApi("/admin/users", { method: "POST", body: JSON.stringify(newUser) });
-      await loadUsers();
+  const createUserMutation = useMutation({
+    mutationFn: async (userToCreate: any) => {
+      await fetchApi("/admin/users", { method: "POST", body: JSON.stringify(userToCreate) });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsersData'] });
       setIsModalOpen(false);
       setNewUser({ email: "", password: "", firstName: "", lastName: "", role: "ORG_ADMIN", tenantId: tenants[0]?.id || "" });
-    } catch (err: any) { alert(err.message || "Failed to create user"); }
-    finally { setIsSubmitting(false); }
-  };
+    },
+    onError: (err: any) => alert(err.message || "Failed to create user")
+  });
 
-  async function handleToggleStatus(userId: string, currentStatus: boolean) {
-    if (!confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this user?`)) return;
-    setActionLoading(userId);
-    try {
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ userId, currentStatus }: { userId: string, currentStatus: boolean }) => {
       await fetchApi("/super-admin/users/bulk-action", {
         method: "POST",
         body: JSON.stringify({ action: currentStatus ? "deactivate" : "activate", userIds: [userId] })
       });
-      await loadUsers();
-    } catch (err: any) { alert(err.message || "Action failed"); }
-    finally { setActionLoading(null); }
-  }
+    },
+    onMutate: (variables) => { setActionLoading(variables.userId); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['adminUsersData'] }); },
+    onError: (err: any) => alert(err.message || "Action failed"),
+    onSettled: () => { setActionLoading(null); }
+  });
 
-  async function handleDeleteUser(userId: string) {
-    if (!confirm("Are you sure you want to PERMANENTLY delete this user? This action cannot be undone.")) return;
-    setActionLoading(userId);
-    try {
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
       await fetchApi(`/admin/users/${userId}`, { method: "DELETE" });
-      await loadUsers();
-    } catch (err: any) { alert(err.message || "Failed to delete user"); }
-    finally { setActionLoading(null); }
-  }
+    },
+    onMutate: (userId) => { setActionLoading(userId); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['adminUsersData'] }); },
+    onError: (err: any) => alert(err.message || "Failed to delete user"),
+    onSettled: () => { setActionLoading(null); }
+  });
+
+  const handleEditUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingUser) editUserMutation.mutate(editingUser);
+  };
+
+  const handleCreateUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    createUserMutation.mutate(newUser);
+  };
+
+  const handleToggleStatus = (userId: string, currentStatus: boolean) => {
+    if (!confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this user?`)) return;
+    toggleStatusMutation.mutate({ userId, currentStatus });
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    if (!confirm("Are you sure you want to PERMANENTLY delete this user? This action cannot be undone.")) return;
+    deleteUserMutation.mutate(userId);
+  };
 
   if (loading) return <div className="flex justify-center items-center h-full min-h-[500px]"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
 
@@ -109,20 +126,20 @@ export default function GlobalUsersPage() {
       {isModalOpen && (
         <UserModal 
           title="Provision New User" user={newUser} onChange={setNewUser} onSubmit={handleCreateUser} onCancel={() => setIsModalOpen(false)}
-          isSubmitting={isSubmitting} submitLabel={isSubmitting ? "Creating..." : "Create User"} roles={roles} tenants={tenants} showPassword={true} theme="dark"
+          isSubmitting={createUserMutation.isPending} submitLabel={createUserMutation.isPending ? "Creating..." : "Create User"} roles={roles} tenants={tenants} showPassword={true} theme="dark"
         />
       )}
 
       {editingUser && (
         <UserModal 
           title="Edit User" user={editingUser} onChange={setEditingUser} onSubmit={handleEditUser} onCancel={() => setEditingUser(null)}
-          isSubmitting={isEditSubmitting} submitLabel={isEditSubmitting ? "Saving..." : "Save Changes"} roles={roles} theme="dark"
+          isSubmitting={editUserMutation.isPending} submitLabel={editUserMutation.isPending ? "Saving..." : "Save Changes"} roles={roles} theme="dark"
         />
       )}
 
-      {error && (
+      {queryError && (
         <div className="bg-red-900/50 border border-red-500/50 text-red-200 p-4 rounded-lg mb-6 flex items-start">
-          <ShieldAlert className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" /><p>{error}</p>
+          <ShieldAlert className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" /><p>{(queryError as Error).message || "Failed to load users data"}</p>
         </div>
       )}
 

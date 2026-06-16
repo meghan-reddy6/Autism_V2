@@ -1,5 +1,6 @@
 "use client"
 import * as React from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/Card"
 import { Badge } from "@/shared/ui/Badge"
 import { Activity, Users, FileText, AlertCircle } from "lucide-react"
@@ -7,39 +8,38 @@ import { fetchApi } from "@/lib/api-client"
 import { formatDateTime } from "@/lib/tailwindClasses"
 
 export default function ClinicDashboard() {
-  const [stats, setStats] = React.useState<any>({
-    summary: [
-      { title: "Total Active Patients", value: "-", icon: Users, alert: false },
-      { title: "Pending Assessments", value: "-", icon: FileText, alert: false },
-      { title: "High-Risk Alerts", value: "-", icon: AlertCircle, alert: false },
-      { title: "Weekly Consultations", value: "-", icon: Activity, alert: false },
-    ],
-    recent_activity: []
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['dashboardStats'],
+    queryFn: () => fetchApi('/dashboard/stats')
   });
-  const [loading, setLoading] = React.useState(true);
 
-  React.useEffect(() => {
-    async function loadStats() {
-      try {
-        const data = await fetchApi('/dashboard/stats');
-        // Map icons back
-        const icons = [Users, FileText, AlertCircle, Activity];
-        data.summary = data.summary.map((s: any, idx: number) => ({
-          ...s,
-          icon: icons[idx]
-        }));
-        setStats(data);
-      } catch (e) {
-        console.error("Failed to fetch dashboard stats", e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadStats();
-  }, []);
+  const stats = React.useMemo(() => {
+    if (!data) return {
+      summary: [
+        { title: "Total Active Patients", value: "-", icon: Users, alert: false },
+        { title: "Pending Assessments", value: "-", icon: FileText, alert: false },
+        { title: "High-Risk Alerts", value: "-", icon: AlertCircle, alert: false },
+        { title: "Weekly Consultations", value: "-", icon: Activity, alert: false },
+      ],
+      recent_activity: []
+    };
+    
+    const icons = [Users, FileText, AlertCircle, Activity];
+    return {
+      ...data,
+      summary: data.summary?.map((s: any, idx: number) => ({
+        ...s,
+        icon: icons[idx]
+      })) || []
+    };
+  }, [data]);
 
-  if (loading) {
+  if (isLoading) {
     return <div className="p-8 text-center text-slate-500 animate-pulse">Loading dashboard...</div>;
+  }
+
+  if (error) {
+    return <div className="p-8 text-center text-rose-500">Failed to load dashboard: {(error as Error).message}</div>;
   }
 
   return (

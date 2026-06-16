@@ -4,13 +4,16 @@ import React from "react";
 import { LogOut } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function AdminLogoutButton() {
   const { logout } = useAuthStore();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const handleLogout = () => {
     logout();
+    queryClient.clear();
     router.push("/login");
   };
 

@@ -1,22 +1,21 @@
 "use client";
-import { useEffect, useState } from "react";
 import { fetchAssessmentTemplate } from "@/lib/api-client";
 import { FormRenderer } from "@/features/assessments/components/FormRenderer";
 import { ProgressIndicator } from "@/features/assessments/components/ProgressIndicator";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { getAssessmentSchema } from "@/lib/assessment-forms";
+import { useQuery } from "@tanstack/react-query";
 
 export default function AssessmentPage({ params }: { params: { token: string } }) {
-  const [data, setData] = useState<any>(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['assessmentTemplate', params.token],
+    queryFn: async () => {
+      return fetchAssessmentTemplate(params.token);
+    },
+    enabled: !!params.token
+  });
 
-  useEffect(() => {
-    fetchAssessmentTemplate(params.token)
-      .then(setData)
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [params.token]);
+  const error = queryError ? (queryError as Error).message : "";
 
   if (loading) {
     return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>;

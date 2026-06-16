@@ -16,3 +16,4 @@ python-multipart==0.0.9
 slowapi==0.1.9
 pyotp==2.9.0
 qrcode==8.2
+arq>=0.25.0

@@ -1,106 +1,103 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { fetchApi } from "@/lib/api-client";
 import { Users, Loader2, ShieldAlert } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { UserTable } from "@/components/shared/UserTable";
 import { UserModal } from "@/components/shared/UserModal";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function TeamManagementPage() {
+  const queryClient = useQueryClient();
   const { user } = useAuthStore();
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newUser, setNewUser] = useState({ email: "", password: "", firstName: "", lastName: "", role: "DOCTOR" });
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
-  const [isEditSubmitting, setIsEditSubmitting] = useState(false);
-  const [roles, setRoles] = useState<string[]>([]);
 
   const isAuthorized = ["ORG_ADMIN", "SUPER_ADMIN"].includes(user?.role as string);
 
-  useEffect(() => {
-    if (isAuthorized) {
-        loadTeam();
-    } else {
-        setLoading(false);
-    }
-  }, [isAuthorized]);
-
-  async function loadTeam() {
-    try {
+  const { data, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['teamData'],
+    queryFn: async () => {
       const [teamData, rolesData] = await Promise.all([
         fetchApi("/team"),
         fetchApi("/team/roles")
       ]);
-      setTeamMembers(teamData);
-      setRoles(rolesData.roles.filter((r: string) => r !== "SUPER_ADMIN"));
-    } catch (err: any) {
-      setError(err.message || "Failed to load team data");
-    } finally {
-      setLoading(false);
-    }
-  }
+      return {
+        teamMembers: teamData,
+        roles: rolesData.roles.filter((r: string) => r !== "SUPER_ADMIN")
+      };
+    },
+    enabled: isAuthorized
+  });
 
-  const handleEditUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingUser) return;
-    setIsEditSubmitting(true);
-    try {
-      await fetchApi(`/team/${editingUser.id}`, {
+  const teamMembers = data?.teamMembers || [];
+  const roles = data?.roles || [];
+  const error = queryError ? (queryError as Error).message : "";
+
+  const editUserMutation = useMutation({
+    mutationFn: async (updatedUser: any) => {
+      await fetchApi(`/team/${updatedUser.id}`, {
         method: "PATCH",
         body: JSON.stringify({
-          firstName: editingUser.firstName,
-          lastName: editingUser.lastName,
-          email: editingUser.email,
-          role: editingUser.role,
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+          email: updatedUser.email,
+          role: updatedUser.role,
         })
       });
-      await loadTeam();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teamData'] });
       setEditingUser(null);
-    } catch (err: any) {
-      alert(err.message || "Failed to update user");
-    } finally {
-      setIsEditSubmitting(false);
-    }
-  };
+    },
+    onError: (err: any) => alert(err.message || "Failed to update user")
+  });
 
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
+  const createUserMutation = useMutation({
+    mutationFn: async (userToCreate: any) => {
       await fetchApi("/team", {
         method: "POST",
-        body: JSON.stringify(newUser)
+        body: JSON.stringify(userToCreate)
       });
-      await loadTeam();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teamData'] });
       setIsModalOpen(false);
       setNewUser({ email: "", password: "", firstName: "", lastName: "", role: "DOCTOR" });
-    } catch (err: any) {
-      alert(err.message || "Failed to create team member");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    },
+    onError: (err: any) => alert(err.message || "Failed to create team member")
+  });
 
-  async function handleToggleStatus(userId: string, currentStatus: boolean) {
-    if (!confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this team member?`)) return;
-    setActionLoading(userId);
-    try {
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ userId, currentStatus }: { userId: string, currentStatus: boolean }) => {
       await fetchApi("/team/bulk-action", {
         method: "POST",
         body: JSON.stringify({ action: currentStatus ? "deactivate" : "activate", userIds: [userId] })
       });
-      await loadTeam();
-    } catch (err: any) {
-      alert(err.message || "Action failed");
-    } finally {
-      setActionLoading(null);
-    }
-  }
+    },
+    onMutate: (variables) => setActionLoading(variables.userId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['teamData'] }),
+    onError: (err: any) => alert(err.message || "Action failed"),
+    onSettled: () => setActionLoading(null)
+  });
+
+  const handleEditUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingUser) editUserMutation.mutate(editingUser);
+  };
+
+  const handleCreateUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    createUserMutation.mutate(newUser);
+  };
+
+  const handleToggleStatus = (userId: string, currentStatus: boolean) => {
+    if (!confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this team member?`)) return;
+    toggleStatusMutation.mutate({ userId, currentStatus });
+  };
 
   if (!isAuthorized) {
     return (
@@ -131,14 +128,14 @@ export default function TeamManagementPage() {
       {isModalOpen && (
         <UserModal 
           title="Add Team Member" user={newUser} onChange={setNewUser} onSubmit={handleCreateUser} onCancel={() => setIsModalOpen(false)}
-          isSubmitting={isSubmitting} submitLabel={isSubmitting ? "Adding..." : "Add Member"} roles={roles} showPassword={true} theme="light"
+          isSubmitting={createUserMutation.isPending} submitLabel={createUserMutation.isPending ? "Adding..." : "Add Member"} roles={roles} showPassword={true} theme="light"
         />
       )}
 
       {editingUser && (
         <UserModal 
           title="Edit Team Member" user={editingUser} onChange={setEditingUser} onSubmit={handleEditUser} onCancel={() => setEditingUser(null)}
-          isSubmitting={isEditSubmitting} submitLabel={isEditSubmitting ? "Saving..." : "Save Changes"} roles={roles} showPassword={false} theme="light"
+          isSubmitting={editUserMutation.isPending} submitLabel={editUserMutation.isPending ? "Saving..." : "Save Changes"} roles={roles} showPassword={false} theme="light"
         />
       )}
 

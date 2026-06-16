@@ -1,50 +1,45 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { fetchApi } from "@/lib/api-client";
 import { Building2, Plus, Users, Search, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/tailwindClasses";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function OrganizationsPage() {
-  const [orgs, setOrgs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newOrg, setNewOrg] = useState({ name: "", subscriptionTier: "Enterprise", maxUsers: 500, maxStorageGB: 100 });
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    async function loadOrgs() {
-      try {
-        const data = await fetchApi("/admin/organizations");
-        setOrgs(data);
-      } catch (err: any) {
-        setError(err.message || "Failed to load organizations");
-      } finally {
-        setLoading(false);
-      }
+  const { data: orgs = [], isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['adminOrganizations'],
+    queryFn: async () => {
+      return fetchApi("/admin/organizations");
     }
-    loadOrgs();
-  }, []);
+  });
 
-  const handleCreateOrg = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      const created = await fetchApi("/admin/organizations", {
+  const createOrgMutation = useMutation({
+    mutationFn: async (orgData: typeof newOrg) => {
+      return fetchApi("/admin/organizations", {
         method: "POST",
-        body: JSON.stringify(newOrg)
+        body: JSON.stringify(orgData)
       });
-      setOrgs([{ ...created, _count: { users: 0, patients: 0 } }, ...orgs]);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminOrganizations'] });
       setIsModalOpen(false);
       setNewOrg({ name: "", subscriptionTier: "Enterprise", maxUsers: 500, maxStorageGB: 100 });
-    } catch (err: any) {
+    },
+    onError: (err: any) => {
       alert(err.message || "Failed to create organization");
-    } finally {
-      setIsSubmitting(false);
     }
+  });
+
+  const handleCreateOrg = (e: React.FormEvent) => {
+    e.preventDefault();
+    createOrgMutation.mutate(newOrg);
   };
 
   if (loading) {
@@ -97,8 +92,8 @@ export default function OrganizationsPage() {
               </div>
               <div className="flex justify-end gap-3 mt-6">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
-                <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
-                  {isSubmitting ? "Creating..." : "Create Tenant"}
+                <button type="submit" disabled={createOrgMutation.isPending} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+                  {createOrgMutation.isPending ? "Creating..." : "Create Tenant"}
                 </button>
               </div>
             </form>

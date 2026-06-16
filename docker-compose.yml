@@ -8,7 +8,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./db_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d clinical_db"]
       interval: 5s
@@ -50,6 +50,7 @@ services:
       - "8001:8001"
     volumes:
       - ./ml_service:/app
+      - ./config:/config
 
   frontend:
     build:
@@ -64,11 +65,10 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://web-backend:8000
       - WATCHPACK_POLLING=true
-    command: npm run dev
+    command: sh -c "npm install && npm run dev"
     depends_on:
       - web-backend
 
 volumes:
-  postgres_data:
   frontend_node_modules:
   frontend_next_build:

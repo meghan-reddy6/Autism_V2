@@ -5,6 +5,7 @@ import { fetchApi } from "@/lib/api-client"
 import { Button } from "@/shared/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/ui/Card"
 import { Lock, Shield, ShieldCheck, ShieldAlert } from "lucide-react"
+import { useQuery, useMutation } from "@tanstack/react-query"
 
 export function SecuritySettings() {
   const { user } = useAuthStore()
@@ -15,32 +16,40 @@ export function SecuritySettings() {
   const [confirmPassword, setConfirmPassword] = React.useState("")
   const [pwError, setPwError] = React.useState("")
   const [pwSuccess, setPwSuccess] = React.useState("")
-  const [isChangingPw, setIsChangingPw] = React.useState(false)
 
   // MFA State
-  const [mfaEnabled, setMfaEnabled] = React.useState(false) // We ideally want this from user context, but let's assume false initially if we don't have it
   const [mfaSetup, setMfaSetup] = React.useState<{ secret: string, qr_code: string } | null>(null)
   const [mfaPin, setMfaPin] = React.useState("")
   const [mfaError, setMfaError] = React.useState("")
   const [mfaSuccess, setMfaSuccess] = React.useState("")
-  const [isProcessingMfa, setIsProcessingMfa] = React.useState(false)
 
-  React.useEffect(() => {
-    // If the user object from the store has an mfaEnabled property, use it.
-    // In our backend, we might not send mfaEnabled in the login payload currently, 
-    // but ideally we should. Let's assume user.mfaEnabled exists or we fetch /me
-    const loadMe = async () => {
-      try {
-        const me = await fetchApi('/auth/me')
-        setMfaEnabled(!!me.mfaEnabled) // wait, does /auth/me return mfaEnabled? We need to verify.
-        // Actually, if we look at auth.py router.get("/me"), it doesn't return mfaEnabled. 
-        // We'll just have to handle it if it fails or assume false for now until they set it up.
-      } catch (e) { }
+  const { data: meData, refetch: refetchMe } = useQuery({
+    queryKey: ['authMe'],
+    queryFn: async () => fetchApi('/auth/me'),
+    retry: false
+  })
+
+  const mfaEnabled = !!meData?.mfaEnabled
+
+  const passwordMutation = useMutation({
+    mutationFn: async () => {
+      await fetchApi('/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
+      })
+    },
+    onSuccess: () => {
+      setPwSuccess("Password changed successfully")
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+    },
+    onError: (err: any) => {
+      setPwError(err.message || "Failed to change password")
     }
-    loadMe()
-  }, [])
+  })
 
-  const handlePasswordChange = async (e: React.FormEvent) => {
+  const handlePasswordChange = (e: React.FormEvent) => {
     e.preventDefault()
     setPwError("")
     setPwSuccess("")
@@ -49,84 +58,78 @@ export function SecuritySettings() {
       setPwError("New passwords do not match")
       return
     }
-
     if (newPassword.length < 8) {
       setPwError("Password must be at least 8 characters long")
       return
     }
 
-    setIsChangingPw(true)
-    try {
-      await fetchApi('/auth/change-password', {
-        method: 'POST',
-        body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
-      })
-      setPwSuccess("Password changed successfully")
-      setCurrentPassword("")
-      setNewPassword("")
-      setConfirmPassword("")
-    } catch (err: any) {
-      setPwError(err.message || "Failed to change password")
-    } finally {
-      setIsChangingPw(false)
-    }
+    passwordMutation.mutate()
   }
 
-  const startMfaSetup = async () => {
-    setMfaError("")
-    setIsProcessingMfa(true)
-    try {
-      const data = await fetchApi('/mfa/setup', { method: 'POST' })
+  const mfaSetupMutation = useMutation({
+    mutationFn: async () => fetchApi('/mfa/setup', { method: 'POST' }),
+    onSuccess: (data) => {
       setMfaSetup(data)
-    } catch (err: any) {
+    },
+    onError: (err: any) => {
       setMfaError(err.message || "Failed to initiate MFA setup")
-    } finally {
-      setIsProcessingMfa(false)
     }
+  })
+
+  const startMfaSetup = () => {
+    setMfaError("")
+    mfaSetupMutation.mutate()
   }
 
-  const verifyMfaSetup = async () => {
-    setMfaError("")
-    setMfaSuccess("")
-    setIsProcessingMfa(true)
-    try {
+  const mfaVerifyMutation = useMutation({
+    mutationFn: async () => {
       await fetchApi('/mfa/verify', {
         method: 'POST',
         body: JSON.stringify({ pin: mfaPin })
       })
-      setMfaEnabled(true)
+    },
+    onSuccess: () => {
+      refetchMe()
       setMfaSetup(null)
       setMfaPin("")
       setMfaSuccess("Multi-Factor Authentication enabled successfully!")
-    } catch (err: any) {
+    },
+    onError: (err: any) => {
       setMfaError(err.message || "Invalid PIN")
-    } finally {
-      setIsProcessingMfa(false)
     }
+  })
+
+  const verifyMfaSetup = () => {
+    setMfaError("")
+    setMfaSuccess("")
+    mfaVerifyMutation.mutate()
   }
 
-  const disableMfa = async () => {
+  const mfaDisableMutation = useMutation({
+    mutationFn: async () => {
+      await fetchApi('/mfa/disable', {
+        method: 'POST',
+        body: JSON.stringify({ pin: mfaPin })
+      })
+    },
+    onSuccess: () => {
+      refetchMe()
+      setMfaPin("")
+      setMfaSuccess("Multi-Factor Authentication has been disabled.")
+    },
+    onError: (err: any) => {
+      setMfaError(err.message || "Invalid PIN")
+    }
+  })
+
+  const disableMfa = () => {
     setMfaError("")
     setMfaSuccess("")
     if (!mfaPin) {
       setMfaError("Please enter your current Authenticator PIN to disable MFA")
       return
     }
-    
-    setIsProcessingMfa(true)
-    try {
-      await fetchApi('/mfa/disable', {
-        method: 'POST',
-        body: JSON.stringify({ pin: mfaPin })
-      })
-      setMfaEnabled(false)
-      setMfaPin("")
-      setMfaSuccess("Multi-Factor Authentication has been disabled.")
-    } catch (err: any) {
-      setMfaError(err.message || "Invalid PIN")
-    } finally {
-      setIsProcessingMfa(false)
-    }
+    mfaDisableMutation.mutate()
   }
 
   return (
@@ -184,8 +187,8 @@ export function SecuritySettings() {
                 />
               </div>
 
-              <Button type="submit" disabled={isChangingPw || !currentPassword || !newPassword || !confirmPassword}>
-                {isChangingPw ? "Updating..." : "Update Password"}
+              <Button type="submit" disabled={passwordMutation.isPending || !currentPassword || !newPassword || !confirmPassword}>
+                {passwordMutation.isPending ? "Updating..." : "Update Password"}
               </Button>
             </form>
           </CardContent>
@@ -227,7 +230,7 @@ export function SecuritySettings() {
                       maxLength={6}
                       className="w-32 h-10 px-3 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 tracking-widest font-mono text-center"
                     />
-                    <Button variant="danger" onClick={disableMfa} disabled={isProcessingMfa || mfaPin.length < 6}>
+                    <Button variant="danger" onClick={disableMfa} disabled={mfaDisableMutation.isPending || mfaPin.length < 6}>
                       Turn Off
                     </Button>
                   </div>
@@ -262,7 +265,7 @@ export function SecuritySettings() {
                       maxLength={6}
                       className="flex-1 h-10 px-3 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 tracking-widest font-mono text-center"
                     />
-                    <Button onClick={verifyMfaSetup} disabled={isProcessingMfa || mfaPin.length < 6}>
+                    <Button onClick={verifyMfaSetup} disabled={mfaVerifyMutation.isPending || mfaPin.length < 6}>
                       Verify & Enable
                     </Button>
                   </div>
@@ -270,7 +273,7 @@ export function SecuritySettings() {
               </div>
             ) : (
               <div>
-                <Button onClick={startMfaSetup} disabled={isProcessingMfa} className="w-full">
+                <Button onClick={startMfaSetup} disabled={mfaSetupMutation.isPending} className="w-full">
                   <Shield className="w-4 h-4 mr-2" />
                   Set up Google Authenticator
                 </Button>

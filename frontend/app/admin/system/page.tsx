@@ -1,21 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Server, Database, CheckCircle2, AlertCircle } from "lucide-react";
 import { fetchApi } from "@/lib/api-client";
+import { useQuery } from "@tanstack/react-query";
 
 export default function SystemHealthPage() {
-  const [health, setHealth] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchApi("/super-admin/system/health")
-      .then((data) => {
-        setHealth(data);
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: health, isLoading: loading } = useQuery({
+    queryKey: ['systemHealth'],
+    queryFn: async () => {
+      return fetchApi("/super-admin/system/health");
+    }
+  });
 
   if (loading) return <div className="p-10 text-white">Loading system diagnostics...</div>;
 

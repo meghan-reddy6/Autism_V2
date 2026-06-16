@@ -14,6 +14,13 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
+  if (!headers.has('X-Trace-Id')) {
+    const traceId = typeof crypto !== 'undefined' && crypto.randomUUID 
+      ? crypto.randomUUID() 
+      : Math.random().toString(36).substring(2) + Date.now().toString(36);
+    headers.set('X-Trace-Id', traceId);
+  }
+
   let response;
   try {
     const fetchOptions = { ...options };

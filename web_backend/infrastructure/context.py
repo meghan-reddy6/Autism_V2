@@ -6,6 +6,10 @@ current_tenant_id: contextvars.ContextVar[Optional[str]] = contextvars.ContextVa
 current_user_id: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar("current_user_id", default=None)
 current_user_role: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar("current_user_role", default=None)
 current_ip_address: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar("current_ip_address", default=None)
+current_trace_id: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar("current_trace_id", default=None)
+
+def get_trace_id() -> Optional[str]:
+    return current_trace_id.get()
 
 def get_tenant_id() -> Optional[str]:
     return current_tenant_id.get()

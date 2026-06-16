@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -11,6 +11,7 @@ import { User, Activity, BrainCircuit, FileText, CheckCircle2, Copy, ExternalLin
 import { ASSESSMENT_FORMS } from "@/lib/assessment-forms";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -46,19 +47,17 @@ type AssessmentData = z.infer<typeof assessmentSchema>;
 
 export default function NewAssessmentSession() {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [createdSession, setCreatedSession] = useState<{id: string, token: string} | null>(null);
   const { user } = useAuthStore();
-  const [doctors, setDoctors] = useState<any[]>([]);
 
-  useEffect(() => {
-    if (user?.role === "ORG_ADMIN" || user?.role === "SUPER_ADMIN" || user?.role === "RECEPTIONIST") {
-      fetchApi("/team").then(data => {
-        setDoctors(data.filter((m: any) => m.role === "DOCTOR"));
-      }).catch(err => console.error(err));
-    }
-  }, [user]);
+  const { data: teamData = [] } = useQuery({
+    queryKey: ['team'],
+    queryFn: () => fetchApi("/team"),
+    enabled: user?.role === "ORG_ADMIN" || user?.role === "SUPER_ADMIN" || user?.role === "RECEPTIONIST"
+  });
+
+  const doctors = teamData.filter((m: any) => m.role === "DOCTOR");
 
   const {
     register,
@@ -72,11 +71,8 @@ export default function NewAssessmentSession() {
 
   const selectedScaleKey = watch("scaleType");
 
-  const onSubmit = async (data: AssessmentData) => {
-    setIsSubmitting(true);
-    setError("");
-    
-    try {
+  const createSessionMutation = useMutation({
+    mutationFn: async (data: AssessmentData) => {
       // 1. Create Patient Record in EMR
       const patient = await fetchApi('/patients', {
         method: "POST",
@@ -93,22 +89,26 @@ export default function NewAssessmentSession() {
       });
 
       // 2. Generate Assessment Session
-      const session = await fetchApi('/assessment-sessions', {
+      return fetchApi('/assessment-sessions', {
         method: "POST",
         body: JSON.stringify({
           patientId: patient.id,
           scaleType: data.scaleType
         }),
       });
-
+    },
+    onSuccess: (session) => {
       setCreatedSession(session);
-      
-    } catch (err: any) {
+    },
+    onError: (err: any) => {
       console.error(err);
       setError(err.message || "Failed to create assessment session. Please try again.");
-    } finally {
-      setIsSubmitting(false);
     }
+  });
+
+  const onSubmit = (data: AssessmentData) => {
+    setError("");
+    createSessionMutation.mutate(data);
   };
 
   const copyLink = () => {
@@ -267,10 +267,10 @@ export default function NewAssessmentSession() {
             <div className="pt-6 border-t border-slate-100 flex justify-end">
               <button 
                 type="submit" 
-                disabled={isSubmitting}
+                disabled={createSessionMutation.isPending}
                 className="px-8 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors disabled:opacity-70"
               >
-                {isSubmitting ? "Generating Link..." : "Create Assessment Session"}
+                {createSessionMutation.isPending ? "Generating Link..." : "Create Assessment Session"}
               </button>
             </div>
 

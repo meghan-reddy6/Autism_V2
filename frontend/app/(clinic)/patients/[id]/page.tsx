@@ -1,5 +1,6 @@
 "use client"
 import * as React from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/Card"
 import { Badge } from "@/shared/ui/Badge"
 import { Button } from "@/shared/ui/Button"
@@ -13,32 +14,26 @@ export default function PatientView({ params }: { params: { id: string } }) {
   const [activeTab, setActiveTab] = React.useState("assessments")
   const [selectedAssessment, setSelectedAssessment] = React.useState<any | null>(null)
   
-  const [patient, setPatient] = React.useState<any>(null)
-  const [loading, setLoading] = React.useState(true)
-
-  React.useEffect(() => {
-    async function loadPatient() {
-      try {
-        const data = await fetchApi(`/patients/${params.id}`);
-        // Calculate age
-        const dob = new Date(data.dateOfBirth);
-        const ageDiffMs = Date.now() - dob.getTime();
-        const ageDate = new Date(ageDiffMs);
-        const years = Math.abs(ageDate.getUTCFullYear() - 1970);
-        data.age = `${years} yrs`;
-        
-        setPatient(data);
-      } catch (e) {
-        console.error("Failed to load patient", e);
-      } finally {
-        setLoading(false);
-      }
+  const { data: patient, isLoading: loading, error } = useQuery({
+    queryKey: ['patient', params.id],
+    queryFn: async () => {
+      const data = await fetchApi(`/patients/${params.id}`);
+      // Calculate age
+      const dob = new Date(data.dateOfBirth);
+      const ageDiffMs = Date.now() - dob.getTime();
+      const ageDate = new Date(ageDiffMs);
+      const years = Math.abs(ageDate.getUTCFullYear() - 1970);
+      data.age = `${years} yrs`;
+      return data;
     }
-    loadPatient();
-  }, [params.id]);
+  });
 
   if (loading) {
     return <div className="p-8 text-center text-slate-500 animate-pulse">Loading patient record...</div>;
+  }
+
+  if (error) {
+    return <div className="p-8 text-center text-rose-500">Failed to load patient: {(error as Error).message}</div>;
   }
 
   if (!patient) {

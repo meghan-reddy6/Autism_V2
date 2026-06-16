@@ -1,46 +1,55 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Trash2, RotateCcw, AlertTriangle } from "lucide-react";
 import { fetchApi } from "@/lib/api-client";
 import { formatDate } from "@/lib/tailwindClasses";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function RecycleBinPage() {
-  const [patients, setPatients] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const loadData = () => {
-    setLoading(true);
-    fetchApi("/api/v1/recycle-bin/patients")
-      .then((data) => setPatients(data.deleted_patients || []))
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
-  };
+  const { data: patients = [], isLoading: loading } = useQuery({
+    queryKey: ['recycleBinPatients'],
+    queryFn: async () => {
+      const data = await fetchApi("/api/v1/recycle-bin/patients");
+      return data.deleted_patients || [];
+    }
+  });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const handleRestore = async (id: string) => {
-    if (!confirm("Are you sure you want to restore this patient?")) return;
-    try {
+  const restoreMutation = useMutation({
+    mutationFn: async (id: string) => {
       await fetchApi(`/api/v1/recycle-bin/patients/${id}/restore`, { method: "POST" });
-      loadData();
-    } catch (err) {
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recycleBinPatients'] });
+    },
+    onError: (err) => {
       console.error(err);
       alert("Failed to restore patient");
     }
-  };
+  });
 
-  const handlePurge = async (id: string) => {
-    if (!confirm("WARNING: This will permanently delete the patient and all associated data. This action cannot be undone. Proceed?")) return;
-    try {
+  const purgeMutation = useMutation({
+    mutationFn: async (id: string) => {
       await fetchApi(`/api/v1/recycle-bin/patients/${id}/purge`, { method: "DELETE" });
-      loadData();
-    } catch (err) {
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recycleBinPatients'] });
+    },
+    onError: (err) => {
       console.error(err);
       alert("Failed to purge patient");
     }
+  });
+
+  const handleRestore = (id: string) => {
+    if (!confirm("Are you sure you want to restore this patient?")) return;
+    restoreMutation.mutate(id);
+  };
+
+  const handlePurge = (id: string) => {
+    if (!confirm("WARNING: This will permanently delete the patient and all associated data. This action cannot be undone. Proceed?")) return;
+    purgeMutation.mutate(id);
   };
 
   return (

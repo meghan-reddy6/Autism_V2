@@ -1,8 +1,10 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from infrastructure.context import current_ip_address
+from infrastructure.context import current_ip_address, current_trace_id
+import uuid
 import logging
+from infrastructure.logging_config import setup_structured_logging
 from contextlib import asynccontextmanager
 import os
 import asyncio
@@ -24,7 +26,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from dependencies import limiter
 
-logging.basicConfig(level=logging.INFO)
+setup_structured_logging()
 logger = logging.getLogger(__name__)
 
 @asynccontextmanager
@@ -92,6 +94,17 @@ class IPCaptureMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 app.add_middleware(IPCaptureMiddleware)
+
+class TracePropagationMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        trace_id = request.headers.get("X-Trace-Id") or str(uuid.uuid4())
+        current_trace_id.set(trace_id)
+        
+        response = await call_next(request)
+        response.headers["X-Trace-Id"] = trace_id
+        return response
+
+app.add_middleware(TracePropagationMiddleware)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)

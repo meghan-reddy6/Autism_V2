@@ -12,6 +12,33 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
+import logging
+import json
+from datetime import datetime
+import yaml
+
+# Structured logger for ML inference
+class MLJSONFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord) -> str:
+        log_obj = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "level": record.levelname,
+            "message": record.getMessage(),
+        }
+        if hasattr(record, "trace_id"):
+            log_obj["trace_id"] = record.trace_id
+        if hasattr(record, "inference_data"):
+            log_obj["inference_data"] = record.inference_data
+        return json.dumps(log_obj)
+
+logger = logging.getLogger("ml_service")
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+handler.setFormatter(MLJSONFormatter())
+logger.addHandler(handler)
+
+with open("../config/scoring_thresholds.yaml", "r") as f:
+    SCORING_CONFIG = yaml.safe_load(f)["scales"]
 
 app = FastAPI(title="Clinical ML Engine (Explainable AI)")
 
@@ -34,6 +61,7 @@ class InferenceRequest(BaseModel):
     normalized_score: float
     age_months: int
     features: Optional[Dict[str, int]] = None
+    trace_id: Optional[str] = None
 
 def generate_trajectory(current_risk: str) -> list:
     # A mock trajectory forecaster
@@ -52,6 +80,15 @@ def generate_trajectory(current_risk: str) -> list:
 
 @app.post("/analyze")
 async def analyze_score(request: InferenceRequest):
+    # Schema validation against config
+    if request.scale_type not in SCORING_CONFIG:
+        logger.warning(f"Unknown scale type: {request.scale_type}", extra={"trace_id": request.trace_id})
+    else:
+        # Validate schema bounds
+        scale_config = SCORING_CONFIG[request.scale_type]
+        max_possible = max([v[1] for v in scale_config.values() if isinstance(v, list) and len(v) == 2])
+        if request.normalized_score > max_possible or request.normalized_score < 0:
+            logger.error(f"Schema Drift Detected: Normalized score {request.normalized_score} is out of bounds for {request.scale_type}.", extra={"trace_id": request.trace_id})
     if model is None:
         # Fallback if model not trained
         confidence = round(random.uniform(0.75, 0.95), 4)
@@ -146,10 +183,20 @@ async def analyze_score(request: InferenceRequest):
         print(f"SHAP explanation failed: {e}")
         # fallback to empty breakdown
 
-    return {
+    response_data = {
         "risk_level": risk_level,
         "confidence_score": confidence,
         "shap_breakdown": shap_breakdown,
         "trajectory_forecast": generate_trajectory(risk_level),
         "model_version": "v2.0.0-rf-shap",
     }
+    
+    logger.info("Inference completed", extra={
+        "trace_id": request.trace_id,
+        "inference_data": {
+            "inputs": {"scale": request.scale_type, "score": request.normalized_score, "age": request.age_months},
+            "outputs": response_data
+        }
+    })
+    
+    return response_data

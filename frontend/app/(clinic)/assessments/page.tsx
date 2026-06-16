@@ -1,5 +1,6 @@
 "use client"
 import React from "react"
+import { useQuery } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/Card"
 import { Badge } from "@/shared/ui/Badge"
@@ -12,29 +13,19 @@ export default function AllAssessmentsPage() {
   const router = useRouter()
   const { user } = useAuthStore()
   const isDoctor = user?.role ? ["SUPER_ADMIN", "ORG_ADMIN", "DOCTOR"].includes(user.role) : false;
-  const [assessments, setAssessments] = React.useState<any[]>([])
-  const [loading, setLoading] = React.useState(true)
-  const [error, setError] = React.useState("")
-
   const [statusFilter, setStatusFilter] = React.useState<string>("ALL")
 
-  React.useEffect(() => {
-    async function loadData() {
-      setLoading(true)
-      try {
-        const endpoint = statusFilter === "ALL" 
-          ? '/assessment-sessions' 
-          : `/assessment-sessions?status=${statusFilter}`
-        const data = await fetchApi(endpoint)
-        setAssessments(data)
-      } catch (err: any) {
-        setError(err.message || "Failed to load assessments")
-      } finally {
-        setLoading(false)
-      }
+  const { data: assessments = [], isLoading: loading, error } = useQuery({
+    queryKey: ['assessments', statusFilter],
+    queryFn: () => {
+      const endpoint = statusFilter === "ALL" 
+        ? '/assessment-sessions' 
+        : `/assessment-sessions?status=${statusFilter}`
+      return fetchApi(endpoint)
     }
-    loadData()
-  }, [statusFilter])
+  });
+
+  const errorMessage = error ? (error as Error).message : "";
 
   const getRiskColor = (risk: string) => {
     switch (risk) {
@@ -104,9 +95,9 @@ export default function AllAssessmentsPage() {
               <Loader2 className="w-8 h-8 animate-spin mb-4 text-blue-600" />
               <p>Loading assessment records...</p>
             </div>
-          ) : error ? (
+          ) : errorMessage ? (
             <div className="p-8 text-center text-rose-500">
-              <p>{error}</p>
+              <p>{errorMessage}</p>
             </div>
           ) : assessments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-slate-500">
@@ -128,7 +119,7 @@ export default function AllAssessmentsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
-                {assessments.map((assessment) => (
+                {assessments.map((assessment: any) => (
                   <tr 
                     key={assessment.id} 
                     onClick={() => router.push(`/assessments/${assessment.id}`)}
