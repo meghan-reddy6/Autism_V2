@@ -2,12 +2,12 @@
 import React from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/Card"
-import { Badge } from "@/shared/ui/Badge"
-import { fetchApi } from "@/lib/api-client"
+import { Card, CardContent, CardHeader, CardTitle } from "@/src/core/ui/Card"
+import { Badge } from "@/src/core/ui/Badge"
+import { fetchApi } from "@/src/core/api/api-client"
 import { FileText, Search, Filter, Loader2, ArrowRight } from "lucide-react"
-import { useAuthStore } from "@/lib/store"
-import { formatDate } from "@/lib/tailwindClasses"
+import { useAuthStore } from "@/src/features/auth/store/authStore"
+import { formatDate } from "@/src/core/ui/tailwindClasses"
 
 export default function AllAssessmentsPage() {
   const router = useRouter()

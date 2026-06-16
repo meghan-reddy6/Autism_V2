@@ -1,9 +1,9 @@
 "use client";
-import { fetchAssessmentTemplate } from "@/lib/api-client";
-import { FormRenderer } from "@/features/assessments/components/FormRenderer";
-import { ProgressIndicator } from "@/features/assessments/components/ProgressIndicator";
+import { fetchAssessmentTemplate } from "@/src/core/api/api-client";
+import { FormRenderer } from "@/src/features/assessments/components/FormRenderer";
+import { ProgressIndicator } from "@/src/features/assessments/components/ProgressIndicator";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { getAssessmentSchema } from "@/lib/assessment-forms";
+import { getAssessmentSchema } from "@/src/features/assessments/data/assessment-forms";
 import { useQuery } from "@tanstack/react-query";
 
 export default function AssessmentPage({ params }: { params: { token: string } }) {

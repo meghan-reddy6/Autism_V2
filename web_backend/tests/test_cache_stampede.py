@@ -1,7 +1,7 @@
 import pytest
 import asyncio
 from unittest.mock import AsyncMock
-from infrastructure.redisCacheManager import coalesce
+from src.infrastructure.cache.redis_cache_manager import coalesce
 
 @pytest.mark.asyncio
 async def test_cache_stampede_protection():
@@ -9,7 +9,7 @@ async def test_cache_stampede_protection():
     db_fetch_count = 0
     
     # We must patch cache_service methods to simulate cache missing and locks
-    from infrastructure.redisCacheManager import cache_service
+    from src.infrastructure.cache.redis_cache_manager import cache_service
     import infrastructure.redisCacheManager as cs_module
     from fastapi_cache import FastAPICache
     from unittest.mock import MagicMock

@@ -1,14 +1,14 @@
 "use client"
 import * as React from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/Card"
-import { Badge } from "@/shared/ui/Badge"
-import { Button } from "@/shared/ui/Button"
-import { CDSSModal } from "@/features/patients/components/CDSSModal"
+import { Card, CardContent, CardHeader, CardTitle } from "@/src/core/ui/Card"
+import { Badge } from "@/src/core/ui/Badge"
+import { Button } from "@/src/core/ui/Button"
+import { CDSSModal } from "@/src/features/patients/components/CDSSModal"
 import { FileText, Calendar, Activity, Clock, Plus } from "lucide-react"
-import { fetchApi } from "@/lib/api-client"
+import { fetchApi } from "@/src/core/api/api-client"
 
-import { formatDate, formatDateTime } from "@/lib/tailwindClasses"
+import { formatDate, formatDateTime } from "@/src/core/ui/tailwindClasses"
 
 export default function PatientView({ params }: { params: { id: string } }) {
   const [activeTab, setActiveTab] = React.useState("assessments")

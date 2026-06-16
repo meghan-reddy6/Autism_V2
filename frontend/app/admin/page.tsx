@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchApi } from "@/lib/api-client";
+import { fetchApi } from "@/src/core/api/api-client";
 import { Users, Building2, FileText, Activity, AlertCircle, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 

@@ -1,7 +1,7 @@
 import { Inter } from "next/font/google";
 import { Activity, Users, Settings, FileText } from "lucide-react";
 import React from "react";
-import { ReactQueryProvider } from "@/lib/react-query";
+import { ReactQueryProvider } from "@/src/core/api/react-query";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });

@@ -5,13 +5,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
-import { fetchApi } from "@/lib/api-client";
-import { useAuthStore } from "@/lib/store";
+import { fetchApi } from "@/src/core/api/api-client";
+import { useAuthStore } from "@/src/features/auth/store/authStore";
 import { User, Activity, BrainCircuit, FileText, CheckCircle2, Copy, ExternalLink } from "lucide-react";
-import { ASSESSMENT_FORMS } from "@/lib/assessment-forms";
+import { ASSESSMENT_FORMS } from "@/src/features/assessments/data/assessment-forms";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { QRCodeSVG } from "qrcode.react";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -130,6 +131,18 @@ export default function NewAssessmentSession() {
             The assessment session has been generated. If you provided an email address, the secure link was automatically dispatched to the parent.
           </p>
           
+          <div className="flex justify-center mb-6">
+            {typeof window !== 'undefined' && (
+              <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                <QRCodeSVG 
+                  value={`${window.location.origin}/assessment/${createdSession.token}`} 
+                  size={160}
+                  level="H"
+                />
+              </div>
+            )}
+          </div>
+
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-8 flex items-center justify-between">
             <code className="text-sm text-slate-700 truncate mr-4">
               {typeof window !== 'undefined' ? `${window.location.origin}/assessment/${createdSession.token}` : ''}
@@ -223,7 +236,7 @@ export default function NewAssessmentSession() {
                     <label className="text-sm font-semibold text-slate-700">Assign to Doctor (Optional)</label>
                     <select {...register("assignedDoctorId")} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none">
                       <option value="">Unassigned</option>
-                      {doctors.map(d => (
+                      {doctors.map((d: any) => (
                         <option key={d.id} value={d.id}>Dr. {d.firstName} {d.lastName}</option>
                       ))}
                     </select>

@@ -4,7 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 from fastapi.testclient import TestClient
-from main import app
+from src.main import app
 from unittest.mock import patch, AsyncMock, MagicMock
 from datetime import datetime, timezone, timedelta
 
@@ -22,7 +22,7 @@ async def test_account_lockout():
     mock_user_actions = MagicMock()
     mock_user_actions.find_unique = AsyncMock(return_value=mock_user)
     
-    with patch("domains.auth.db.user", new=mock_user_actions):
+    with patch("src.controllers.auth.db.user", new=mock_user_actions):
         response = client.post("/api/v1/auth/login", data={"username": "test@test.com", "password": "password"})
         
         # Should be forbidden because account is locked

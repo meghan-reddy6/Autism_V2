@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { fetchApi } from "@/lib/api-client";
+import { fetchApi } from "@/src/core/api/api-client";
 import { ArrowLeft, Building2, Users, FileText, HardDrive, Activity, CheckCircle2, ShieldAlert, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 

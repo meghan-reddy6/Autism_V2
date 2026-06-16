@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { fetchApi } from "@/lib/api-client";
+import { fetchApi } from "@/src/core/api/api-client";
 import { Building2, Plus, Users, Search, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { formatDate } from "@/lib/tailwindClasses";
+import { formatDate } from "@/src/core/ui/tailwindClasses";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function OrganizationsPage() {
@@ -126,7 +126,7 @@ export default function OrganizationsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">
-              {orgs.map((org) => (
+              {orgs.map((org: any) => (
                 <tr 
                   key={org.id} 
                   onClick={() => router.push(`/admin/organizations/${org.id}`)}

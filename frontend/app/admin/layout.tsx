@@ -1,7 +1,7 @@
-import { AdminGuard } from "@/features/auth/components/AdminGuard";
+import { AdminGuard } from "@/src/features/auth/components/AdminGuard";
 import { LayoutDashboard, Users, Building2, Settings, LogOut, Activity, Trash2, Server } from "lucide-react";
 import Link from "next/link";
-import AdminLogoutButton from "@/features/auth/components/AdminLogoutButton";
+import AdminLogoutButton from "@/src/features/auth/components/AdminLogoutButton";
 
 export default function AdminLayout({
   children,

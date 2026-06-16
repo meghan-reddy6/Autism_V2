@@ -5,8 +5,8 @@ import os
 os.environ["OFFLINE_MODE"] = "True"
 
 from fastapi.testclient import TestClient
-from main import app
-from dependencies import get_current_user
+from src.main import app
+from src.api.dependencies import get_current_user
 
 # Mock User Object
 class MockUser:

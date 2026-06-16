@@ -1,22 +1,22 @@
 from unittest.mock import AsyncMock, patch
 
 def test_list_sessions(client):
-    with patch('domains.patients.assessment_sessions.db') as mock_db:
+    with patch('src.controllers.patients.assessment_sessions.db') as mock_db:
         mock_db.assessmentsession.find_many = AsyncMock(return_value=[])
         response = client.get("/api/v1/assessment-sessions")
         assert response.status_code == 200
         assert response.json() == []
 
 def test_create_session_no_template(client):
-    with patch('domains.patients.assessment_sessions.db') as mock_db:
+    with patch('src.controllers.patients.assessment_sessions.db') as mock_db:
         mock_db.assessmenttemplate.find_first = AsyncMock(return_value=None)
         response = client.post("/api/v1/assessment-sessions", json={"patientId": "p1", "scaleType": "UNKNOWN"})
         assert response.status_code == 400
         assert "Template not found" in response.json()["detail"]
 
 def test_create_session_success(client):
-    with patch('domains.patients.assessment_sessions.db') as mock_db, \
-         patch('domains.patients.assessment_sessions.send_assessment_link', new_callable=AsyncMock) as mock_email:
+    with patch('src.controllers.patients.assessment_sessions.db') as mock_db, \
+         patch('src.controllers.patients.assessment_sessions.send_assessment_link', new_callable=AsyncMock) as mock_email:
         
         # Mock template
         class MockTemplate:

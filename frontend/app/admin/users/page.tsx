@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { fetchApi } from "@/lib/api-client";
+import { fetchApi } from "@/src/core/api/api-client";
 import { Users, Loader2, ShieldAlert } from "lucide-react";
-import { UserTable } from "@/components/shared/UserTable";
-import { UserModal } from "@/components/shared/UserModal";
+import { UserTable } from "@/src/components/shared/UserTable";
+import { UserModal } from "@/src/components/shared/UserModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function GlobalUsersPage() {

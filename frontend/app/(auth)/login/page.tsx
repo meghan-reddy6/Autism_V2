@@ -5,9 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { useRouter } from "next/navigation"
 
-import { useAuthStore } from "@/lib/store"
-import { Button } from "@/shared/ui/Button"
-import { Card, CardContent } from "@/shared/ui/Card"
+import { useAuthStore } from "@/src/features/auth/store/authStore"
+import { Button } from "@/src/core/ui/Button"
+import { Card, CardContent } from "@/src/core/ui/Card"
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),

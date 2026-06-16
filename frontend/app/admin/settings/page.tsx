@@ -1,6 +1,6 @@
 "use client"
 import React from "react"
-import { SecuritySettings } from "@/features/auth/components/SecuritySettings"
+import { SecuritySettings } from "@/src/features/auth/components/SecuritySettings"
 
 export default function AdminSettingsPage() {
   return (

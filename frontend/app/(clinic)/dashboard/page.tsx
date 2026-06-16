@@ -1,11 +1,11 @@
 "use client"
 import * as React from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/Card"
-import { Badge } from "@/shared/ui/Badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/src/core/ui/Card"
+import { Badge } from "@/src/core/ui/Badge"
 import { Activity, Users, FileText, AlertCircle } from "lucide-react"
-import { fetchApi } from "@/lib/api-client"
-import { formatDateTime } from "@/lib/tailwindClasses"
+import { fetchApi } from "@/src/core/api/api-client"
+import { formatDateTime } from "@/src/core/ui/tailwindClasses"
 
 export default function ClinicDashboard() {
   const { data, isLoading, error } = useQuery({

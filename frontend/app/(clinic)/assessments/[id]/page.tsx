@@ -3,14 +3,14 @@
 import { AlertTriangle, BrainCircuit, Calendar, FileText, Activity, Stethoscope, User, AlertCircle, FilePlus, Phone, MapPin, CheckCircle2, XCircle, Clock, Play, Trash2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import React, { useState, useRef } from "react";
-import { useAuthStore } from "@/lib/store";
-import { fetchApi } from "@/lib/api-client";
-import { formatDate, formatDateTime } from "@/lib/tailwindClasses";
+import { useAuthStore } from "@/src/features/auth/store/authStore";
+import { fetchApi } from "@/src/core/api/api-client";
+import { formatDate, formatDateTime } from "@/src/core/ui/tailwindClasses";
 
-import { SCALES } from "@/features/assessments/logic/assessmentScales";
-import { generateChartData, formatShapData, formatAge, getMaxScore } from "@/features/assessments/logic/assessmentScoreCalculator";
-import { useAssessmentSession } from "@/features/assessments/hooks/useAssessmentSession";
-import { PreliminaryScoring, DiagnosticRadar } from "@/features/assessments/components/AssessmentVisuals";
+import { SCALES } from "@/src/features/assessments/logic/assessmentScales";
+import { generateChartData, formatShapData, formatAge, getMaxScore } from "@/src/features/assessments/logic/assessmentScoreCalculator";
+import { useAssessmentSession } from "@/src/features/assessments/hooks/useAssessmentSession";
+import { PreliminaryScoring, DiagnosticRadar, DomainComparisonChart } from "@/src/features/assessments/components/AssessmentVisuals";
 
 export default function AssessmentResult() {
   const params = useParams();
@@ -150,7 +150,7 @@ export default function AssessmentResult() {
                   <BrainCircuit className="h-12 w-12 text-indigo-500 mx-auto mb-4" />
                   <h3 className="text-xl font-bold text-indigo-900 mb-2">Run Clinical Decision Support</h3>
                   <p className="text-indigo-700 max-w-md mx-auto mb-6">Run the ML-powered scoring model to generate risk predictions and SHAP explainability insights.</p>
-                  <button onClick={triggerScoring} className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm">
+                  <button onClick={() => triggerScoring()} className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm">
                       <Play className="w-4 h-4 mr-2 fill-current" /> Generate ML Score & Report
                   </button>
               </section>
@@ -160,6 +160,7 @@ export default function AssessmentResult() {
               <>
                   <PreliminaryScoring scaleType={scaleType} totalScore={totalScore} maxScore={maxScore} predictedRisk={predictedRisk} confidence={confidence} shapData={shapData} />
                   <DiagnosticRadar chartData={chartData} />
+                  <DomainComparisonChart chartData={chartData} />
               </>
           )}
 

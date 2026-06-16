@@ -1,0 +1,11 @@
+__pycache__
+.venv
+venv
+env
+.env
+*.pyc
+.pytest_cache
+.coverage
+htmlcov
+*.log
+Dockerfile

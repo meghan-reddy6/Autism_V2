@@ -1,8 +1,8 @@
 import pytest
 import asyncio
 from unittest.mock import AsyncMock, patch
-from infrastructure.redisCacheManager import coalesce
-from infrastructure.cache_config import CacheConsistencyLevel
+from src.infrastructure.cache.redis_cache_manager import coalesce
+from src.infrastructure.config.cache_config import CacheConsistencyLevel
 
 @pytest.mark.asyncio
 async def test_strong_consistency_bypass():
@@ -12,7 +12,7 @@ async def test_strong_consistency_bypass():
     async def fetch_data():
         return await mock_func()
         
-    with patch("infrastructure.redisCacheManager.cache_service.get", new_callable=AsyncMock) as mock_get:
+    with patch("src.services.redis_cache_manager.cache_service.get", new_callable=AsyncMock) as mock_get:
         result = await fetch_data()
         
         assert result == {"data": "real_db_data"}
@@ -28,9 +28,9 @@ async def test_eventual_consistency_caching():
     async def fetch_data():
         return await mock_func()
         
-    with patch("infrastructure.redisCacheManager.cache_service.get", new_callable=AsyncMock) as mock_get:
-        with patch("infrastructure.redisCacheManager.cache_service.set", new_callable=AsyncMock) as mock_set:
-            with patch("infrastructure.redisCacheManager.FastAPICache.get_backend", new_callable=AsyncMock) as mock_backend:
+    with patch("src.services.redis_cache_manager.cache_service.get", new_callable=AsyncMock) as mock_get:
+        with patch("src.services.redis_cache_manager.cache_service.set", new_callable=AsyncMock) as mock_set:
+            with patch("src.services.redis_cache_manager.FastAPICache.get_backend", new_callable=AsyncMock) as mock_backend:
                 mock_get.return_value = None
                 mock_backend.return_value = None  # Force fallback behavior for simple test
                 

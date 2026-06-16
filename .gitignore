@@ -1,3 +1,6 @@
+# Database Storage
+db_data/
+
 # Python-generated files
 __pycache__/
 *.py[oc]
@@ -5,22 +8,45 @@ build/
 dist/
 wheels/
 *.egg-info
+.pytest_cache/
+.coverage
+htmlcov/
+.import_linter_cache/
+.importlinter
 
 # Virtual environments
 .venv/
+venv/
+env/
 
-# Node
+# Node / Frontend
 node_modules/
 frontend/node_modules/
-
-# Next.js build output
 .next/
 frontend/.next/
+frontend/out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Environment files
 .env
 .env.local
 .env.production
+.env.development
 
-# Logs
+# Logs & Debug
 *.log
+debug_exceptions.log
+FINAL_AUDIT_REPORTS.md
+FINAL_VERIFICATION_AUDIT.md
+audit_data.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# ML Models & Cache
+ml_service/__pycache__/
+*.joblib
+*.pkl

@@ -1,7 +1,7 @@
 "use client";
 
 import { Server, Database, CheckCircle2, AlertCircle } from "lucide-react";
-import { fetchApi } from "@/lib/api-client";
+import { fetchApi } from "@/src/core/api/api-client";
 import { useQuery } from "@tanstack/react-query";
 
 export default function SystemHealthPage() {

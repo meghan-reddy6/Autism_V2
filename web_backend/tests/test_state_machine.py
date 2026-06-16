@@ -1,5 +1,5 @@
 import pytest
-from infrastructure.state_machine import validate_assessment_session_transition, validate_report_transition
+from src.services.assessment_workflow import validate_assessment_session_transition, validate_report_transition
 
 def test_assessment_session_transitions():
     # Valid transitions

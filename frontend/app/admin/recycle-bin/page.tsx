@@ -1,8 +1,8 @@
 "use client";
 
 import { Trash2, RotateCcw, AlertTriangle } from "lucide-react";
-import { fetchApi } from "@/lib/api-client";
-import { formatDate } from "@/lib/tailwindClasses";
+import { fetchApi } from "@/src/core/api/api-client";
+import { formatDate } from "@/src/core/ui/tailwindClasses";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function RecycleBinPage() {

@@ -1,5 +1,5 @@
 import pytest
-from main import app
+from src.main import app
 from fastapi.testclient import TestClient
 
 def test_openapi_schema_snapshot(snapshot):

@@ -2,10 +2,10 @@
 import React from "react"
 import Link from "next/link"
 import { Activity, Users, Settings, FileText, Calendar, LogOut } from "lucide-react"
-import AuthGuard from "@/features/auth/components/AuthGuard"
-import { ClinicalGuard } from "@/features/auth/components/ClinicalGuard"
-import LogoutButton from "@/features/auth/components/LogoutButton"
-import { useAuthStore } from "@/lib/store"
+import AuthGuard from "@/src/features/auth/components/AuthGuard"
+import { ClinicalGuard } from "@/src/features/auth/components/ClinicalGuard"
+import LogoutButton from "@/src/features/auth/components/LogoutButton"
+import { useAuthStore } from "@/src/features/auth/store/authStore"
 
 export default function ClinicLayout({
   children,

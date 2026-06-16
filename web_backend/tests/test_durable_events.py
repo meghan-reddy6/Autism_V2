@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock
-from infrastructure.events import RedisEventBus, DomainEvent
+from src.infrastructure.events.events import RedisEventBus, DomainEvent
 
 @pytest.mark.asyncio
 async def test_event_bus_publish():

@@ -1,8 +1,8 @@
 "use client"
 import React from "react"
-import { Card, CardContent } from "@/shared/ui/Card"
+import { Card, CardContent } from "@/src/core/ui/Card"
 import { Construction } from "lucide-react"
-import { SecuritySettings } from "@/features/auth/components/SecuritySettings"
+import { SecuritySettings } from "@/src/features/auth/components/SecuritySettings"
 
 export default function SettingsPage() {
   return (

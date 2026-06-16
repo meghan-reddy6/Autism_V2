@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { submitAssessmentResponses, saveDraftResponses } from "@/lib/api-client";
+import { submitAssessmentResponses, saveDraftResponses } from "@/src/core/api/api-client";
 import { useRouter } from "next/navigation";
 import { Loader2, Save } from "lucide-react";
 

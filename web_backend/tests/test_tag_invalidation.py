@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, patch
-from infrastructure.redisCacheManager import cache_service
+from src.infrastructure.cache.redis_cache_manager import cache_service
 
 @pytest.mark.asyncio
 async def test_tag_invalidation():

@@ -4,7 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 from fastapi.testclient import TestClient
-from main import app
+from src.main import app
 from unittest.mock import patch, AsyncMock, MagicMock
 
 @pytest.mark.asyncio
@@ -26,7 +26,7 @@ async def test_session_hijacking_prevention():
     mock_usersession_actions.find_unique = AsyncMock(return_value=mock_session)
     mock_usersession_actions.update = AsyncMock()
     
-    with patch("domains.auth.db.usersession", new=mock_usersession_actions):
+    with patch("src.controllers.auth.db.usersession", new=mock_usersession_actions):
         # Different IP Address
         response = client.post(
             "/api/v1/auth/refresh", 
