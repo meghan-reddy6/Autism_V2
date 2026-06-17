@@ -3,6 +3,7 @@ from src.api.dependencies import validate_assessment_token
 from src.database import db
 from datetime import datetime, timezone
 import json
+from src.schemas.assessment import PublicAssessmentIngestion
 
 router = APIRouter(
     prefix="/api/v1/public/assessment",
@@ -20,21 +21,19 @@ async def get_assessment_form(token: str, session = Depends(validate_assessment_
     }
 
 @router.post("/{token}/responses")
-async def submit_responses(token: str, data: dict, session = Depends(validate_assessment_token)):
+async def submit_responses(token: str, data: PublicAssessmentIngestion, session = Depends(validate_assessment_token)):
     if session.status in ["SUBMITTED", "UNDER_REVIEW", "APPROVED", "ARCHIVED"]:
         raise HTTPException(status_code=400, detail="Assessment already submitted")
         
-    responses = data.get("responses", [])
-    
-    # Store responses
-    for resp in responses:
+    # Commit the full ePHI payload to the PostgreSQL database layer FIRST
+    for resp in data.responses:
         await db.assessmentresponse.create(
             data={
                 "tenantId": session.tenantId,
                 "assessmentSessionId": session.id,
-                "fieldName": resp["fieldName"],
-                "value": json.dumps(resp["value"]),
-                "metadata": json.dumps(resp.get("metadata", {}))
+                "fieldName": resp.fieldName,
+                "value": json.dumps(resp.value),
+                "metadata": json.dumps(resp.metadata) if resp.metadata else "{}"
             }
         )
         
@@ -57,7 +56,7 @@ async def submit_responses(token: str, data: dict, session = Depends(validate_as
                 "action": "SUBMIT_PUBLIC_ASSESSMENT",
                 "resource": "assessmentsession",
                 "resourceId": session.id,
-                "changes": json.dumps({"status": "SUBMITTED", "response_count": len(responses)}),
+                "changes": json.dumps({"status": "SUBMITTED", "response_count": len(data.responses)}),
                 "ipAddress": "PUBLIC"
             }
         )
@@ -68,8 +67,27 @@ async def submit_responses(token: str, data: dict, session = Depends(validate_as
     from src.infrastructure.cache.redis_cache_manager import cache_service
     await cache_service.invalidate_tags(session.tenantId, ["dashboard", "assessmentsession"])
     
-    return {"message": "Responses submitted successfully"}
+    # Calculate age_months for anonymized payload
+    dob = session.patient.dateOfBirth
+    now = datetime.now(timezone.utc)
+    if dob.tzinfo is None:
+        dob = dob.replace(tzinfo=timezone.utc)
+    age_months = (now.year - dob.year) * 12 + now.month - dob.month
+    if now.day < dob.day:
+        age_months -= 1
 
+    # Output an explicitly stripped, anonymized payload object
+    anonymized_payload = data.get_anonymized_payload(session.scaleType, age_months)
+    
+    # Pass out-of-band to ML service via Arq queue
+    try:
+        from src.infrastructure.jobs.worker import enqueue_ml_scoring
+        await enqueue_ml_scoring(anonymized_payload, session.id, session.tenantId, session.createdBy)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Failed to enqueue ML scoring task: {e}")
+    
+    return {"message": "Responses submitted successfully"}
 @router.post("/{token}/save-draft")
 async def save_draft(token: str, data: dict, session = Depends(validate_assessment_token)):
     if session.status in ["SUBMITTED", "UNDER_REVIEW", "APPROVED", "ARCHIVED"]:

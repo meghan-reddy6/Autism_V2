@@ -98,46 +98,29 @@ async def generate_report(
         "features": ml_features
     }
     
-    ml_metadata = await fetch_ml_metadata(ml_payload)
-
-    report = await report_repo.create(
-        tenant_id=current_user.tenantId,
-        data={
-            "assessmentSessionId": assessmentSessionId,
-            "status": "AI_GENERATED",
-            "sections": Json({
-                "scaleType": scale_type,
-                "totalScore": total_score,
-                "predictedRisk": ml_metadata.get("risk_level"),
-                "confidence": ml_metadata.get("confidence_score"),
-                "shapValues": ml_metadata.get("shap_breakdown", {}),
-                "itemScores": ml_features
-            })
-        }
-    )
+    ml_metadata = {
+        "scale_type": scale_type,
+        "normalized_score": total_score,
+        "age_months": age_months,
+        "features": ml_features
+    }
     
-    # State machine transition for session
-    if session.status != "UNDER_REVIEW":
-        if not validate_assessment_session_transition(session.status, "UNDER_REVIEW"):
-            raise HTTPException(status_code=409, detail=f"Cannot transition session from {session.status} to UNDER_REVIEW")
-            
-        await assessment_session_repo.update(
-            tenant_id=current_user.tenantId,
-            where={"id": assessmentSessionId},
-            data={"status": "UNDER_REVIEW"}
-        )
+    # Pass to Arq queue
+    from src.infrastructure.jobs.worker import enqueue_ml_scoring
+    task_id = await enqueue_ml_scoring(ml_metadata, assessmentSessionId, current_user.tenantId, current_user.id)
     
     # Audit log
     await log_audit(
         user_id=current_user.id,
         tenant_id=current_user.tenantId,
-        action="GENERATE_REPORT",
-        resource_type="Report",
-        resource_id=report.id,
+        action="ENQUEUE_GENERATE_REPORT",
+        resource_type="AssessmentSession",
+        resource_id=assessmentSessionId,
         request=request
     )
     
-    return report
+    from fastapi.responses import JSONResponse
+    return JSONResponse(status_code=202, content={"message": "Report generation started", "task_id": task_id})
 
 @router.get("/{reportId}")
 async def get_report(

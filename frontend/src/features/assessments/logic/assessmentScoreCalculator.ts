@@ -22,11 +22,11 @@ export function generateChartData(itemScores: any, scaleType: string) {
     const communication = parse(itemScores.cars_11) + parse(itemScores.cars_12) + parse(itemScores.cars_14);
     const emotional = parse(itemScores.cars_6) + parse(itemScores.cars_10) + parse(itemScores.cars_15);
     return [
-      { domain: 'Social Inter.', score: social, fullMark: 12 },
-      { domain: 'Motor/Object Use', score: motor, fullMark: 12 },
-      { domain: 'Sensory Resp.', score: sensory, fullMark: 12 },
-      { domain: 'Comm. & Cognitive', score: communication, fullMark: 12 },
-      { domain: 'Emotional & General', score: emotional, fullMark: 12 }
+      { domain: 'Social Inter.', score: social, fullMark: 12, baseline: 3 },
+      { domain: 'Motor/Object Use', score: motor, fullMark: 12, baseline: 3 },
+      { domain: 'Sensory Resp.', score: sensory, fullMark: 12, baseline: 3 },
+      { domain: 'Comm. & Cognitive', score: communication, fullMark: 12, baseline: 3 },
+      { domain: 'Emotional & General', score: emotional, fullMark: 12, baseline: 3 }
     ];
   } else if (scaleType === "M-CHAT-R") {
     const parse = (id: string, val: any) => {
@@ -41,10 +41,10 @@ export function generateChartData(itemScores: any, scaleType: string) {
     const behavior = parse("mchat_16", itemScores.mchat_16) + parse("mchat_17", itemScores.mchat_17) + parse("mchat_18", itemScores.mchat_18) + parse("mchat_19", itemScores.mchat_19) + parse("mchat_20", itemScores.mchat_20);
 
     return [
-      { domain: 'Social / Engagement', score: social, fullMark: 5 },
-      { domain: 'Joint Attention', score: attention, fullMark: 5 },
-      { domain: 'Communication', score: communication, fullMark: 5 },
-      { domain: 'Behavior & Motor', score: behavior, fullMark: 5 }
+      { domain: 'Social / Engagement', score: social, fullMark: 5, baseline: 0 },
+      { domain: 'Joint Attention', score: attention, fullMark: 5, baseline: 0 },
+      { domain: 'Communication', score: communication, fullMark: 5, baseline: 0 },
+      { domain: 'Behavior & Motor', score: behavior, fullMark: 5, baseline: 0 }
     ];
   } else {
     // GARS-2
@@ -66,9 +66,9 @@ export function generateChartData(itemScores: any, scaleType: string) {
     for(let i=29; i<=41; i++) social += parse(itemScores[`gars_${i}`]);
 
     return [
-      { domain: 'Stereotyped Behaviors', score: stereotyped, fullMark: 42 },
-      { domain: 'Communication', score: comm, fullMark: 42 },
-      { domain: 'Social Interaction', score: social, fullMark: 39 }
+      { domain: 'Stereotyped Behaviors', score: stereotyped, fullMark: 42, baseline: 0 },
+      { domain: 'Communication', score: comm, fullMark: 42, baseline: 0 },
+      { domain: 'Social Interaction', score: social, fullMark: 39, baseline: 0 }
     ];
   }
 }

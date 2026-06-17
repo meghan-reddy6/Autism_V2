@@ -3,11 +3,7 @@ import { Activity } from "lucide-react";
 import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 
 export function DomainComparisonChart({ chartData }: { chartData: any[] }) {
-  // Create mock baseline data based on the full marks for comparison
-  const comparisonData = chartData?.map(d => ({
-    ...d,
-    baseline: Math.max(1, Math.round(d.fullMark * 0.2)) // Mock baseline (e.g., 20% of max score is typical)
-  })) || [];
+  const comparisonData = chartData || [];
 
   return (
     <section className="break-inside-avoid print:mt-10 mt-8">

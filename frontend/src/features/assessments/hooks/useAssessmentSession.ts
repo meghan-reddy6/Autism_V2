@@ -11,6 +11,15 @@ export function useAssessmentSession(sessionId: string, isDoctor: boolean) {
       return fetchApi(`/assessment-sessions/${sessionId}`);
     },
     enabled: !!sessionId,
+    refetchInterval: (query) => {
+      // If the session is SUBMITTED but we don't have a report yet, poll every 2 seconds
+      // because the background task might be generating it.
+      const sessionData = query.state.data;
+      if (sessionData && sessionData.status === 'SUBMITTED' && (!sessionData.reports || sessionData.reports.length === 0)) {
+        return 2000;
+      }
+      return false;
+    },
   });
 
   const scoringMutation = useMutation({

@@ -1,6 +1,6 @@
 @echo off
 echo Starting Clinical Assessment Portal...
-docker-compose up -d
+docker compose up --build -d
 
 echo Waiting for database to initialize and containers to start...
 timeout /t 10 /nobreak

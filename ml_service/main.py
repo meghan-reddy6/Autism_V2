@@ -166,18 +166,18 @@ async def analyze_score(request: InferenceRequest):
         all_features = list(cat_features) + num_features
         
         # Build breakdown
-        total_abs_shap = np.sum(np.abs(instance_shap))
+        total_abs_shap = float(np.sum(np.abs(instance_shap)))
         if total_abs_shap > 0:
             for feat_name, shap_val in zip(all_features, instance_shap):
                 # We group the categorical ones into "scale_type"
                 clean_name = "scale_type" if feat_name.startswith("scale_type") else feat_name
                 if clean_name not in shap_breakdown:
                     shap_breakdown[clean_name] = 0.0
-                shap_breakdown[clean_name] += abs(float(shap_val))
+                shap_breakdown[clean_name] += float(abs(shap_val))
                 
             # Normalize to percentages
             for k in shap_breakdown.keys():
-                shap_breakdown[k] = round((shap_breakdown[k] / total_abs_shap) * 100, 2)
+                shap_breakdown[k] = round(float((shap_breakdown[k] / total_abs_shap) * 100), 2)
                 
     except Exception as e:
         print(f"SHAP explanation failed: {e}")

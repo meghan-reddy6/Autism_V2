@@ -148,4 +148,41 @@ async def delete_session(session_id: str, request: Request, current_user = Depen
     
     return {"message": "Assessment session deleted successfully"}
 
-
+@router.put("/{session_id}/override")
+async def override_clinical_status(
+    session_id: str,
+    override_data: dict,
+    request: Request,
+    current_user = Depends(require_permission("update_assessment_session"))
+):
+    session = await assessment_session_repo.get_by_id(current_user.tenantId, session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+        
+    status_val = override_data.get("clinicianReviewStatus")
+    if status_val not in ["PENDING", "APPROVED", "OVERRIDDEN"]:
+        raise HTTPException(status_code=400, detail="Invalid clinicianReviewStatus")
+        
+    notes = override_data.get("amendmentNotes")
+    
+    updated = await assessment_session_repo.update(
+        tenant_id=current_user.tenantId,
+        where={"id": session_id},
+        data={
+            "clinicianReviewStatus": status_val,
+            "amendmentNotes": notes,
+            "reviewedBy": current_user.id,
+            "updatedAt": datetime.now(timezone.utc)
+        }
+    )
+    
+    await log_audit(
+        user_id=current_user.id,
+        tenant_id=current_user.tenantId,
+        action=f"CLINICAL_OVERRIDE_{status_val}",
+        resource_type="AssessmentSession",
+        resource_id=session_id,
+        request=request
+    )
+    
+    return updated

@@ -3,6 +3,10 @@ import { BrainCircuit } from "lucide-react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from "recharts";
 
 export function DiagnosticRadar({ chartData }: { chartData: any[] }) {
+  const maxDomain = chartData && chartData.length > 0 
+    ? Math.max(...chartData.map(d => d.fullMark || 10)) 
+    : 10;
+
   return (
     <section className="break-inside-avoid print:mt-10">
       <h2 className="text-lg font-bold text-slate-800 flex items-center mb-4 border-b border-slate-100 pb-2">
@@ -15,7 +19,7 @@ export function DiagnosticRadar({ chartData }: { chartData: any[] }) {
               <RadarChart cx="50%" cy="50%" outerRadius="65%" data={chartData}>
                 <PolarGrid />
                 <PolarAngleAxis dataKey="domain" tick={{ fill: '#475569', fontSize: 11 }} />
-                <PolarRadiusAxis angle={30} domain={[0, 'dataMax']} />
+                <PolarRadiusAxis angle={30} domain={[0, maxDomain]} />
                 <Tooltip />
                 <Radar name="Score" dataKey="score" stroke="#4f46e5" fill="#6366f1" fillOpacity={0.5} />
               </RadarChart>
