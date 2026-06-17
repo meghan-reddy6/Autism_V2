@@ -5,7 +5,7 @@ import uuid
 
 class AssessmentResponseItem(BaseModel):
     fieldName: str
-    value: Any
+    value: float
     metadata: Optional[Dict] = None
 
 class PublicAssessmentIngestion(BaseModel):
@@ -33,26 +33,16 @@ class PublicAssessmentIngestion(BaseModel):
         for r in self.responses:
             val = r.value
             score = 0
-            # Basic deterministic scoring conversion for ML
-            if scale_type == "CARS":
-                if val == "Normal": score = 1
-                elif val == "Mildly abnormal": score = 2
-                elif val == "Moderately abnormal": score = 3
-                elif val == "Severely abnormal": score = 4
-                else: score = int(val) if isinstance(val, (int, str)) and str(val).isdigit() else 0
-            elif scale_type == "M-CHAT-R":
+            
+            # Numeric-only scoring logic
+            if scale_type == "M-CHAT-R":
+                # Reverse scoring: 2, 5, 12 are scored normally (Yes=1). Others reversed (No=1).
                 if r.fieldName in ["mchat_2", "mchat_5", "mchat_12"]:
-                    if val == "Yes": score = 1
+                    score = val
                 else:
-                    if val == "No": score = 1
-            elif scale_type == "GARS-2":
-                if val == "Never": score = 0
-                elif val == "Seldom": score = 1
-                elif val == "Sometimes": score = 2
-                elif val == "Frequently": score = 3
-                else: score = int(val) if isinstance(val, (int, str)) and str(val).isdigit() else 0
+                    score = 1.0 - val
             else:
-                score = int(val) if isinstance(val, (int, str)) and str(val).isdigit() else 0
+                score = val
                 
             total_score += score
             features[r.fieldName] = score

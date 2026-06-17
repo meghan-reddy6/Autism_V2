@@ -60,7 +60,7 @@ class InferenceRequest(BaseModel):
     scale_type: str
     normalized_score: float
     age_months: int
-    features: Optional[Dict[str, int]] = None
+    features: Optional[Dict[str, float]] = None
     trace_id: Optional[str] = None
 
 def generate_trajectory(current_risk: str) -> list:

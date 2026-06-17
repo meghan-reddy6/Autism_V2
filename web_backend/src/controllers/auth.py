@@ -30,8 +30,10 @@ class ChangePasswordRequest(BaseModel):
 
 from src.api.dependencies import limiter
 
+import asyncio
+
 @router.post("/login", response_model=TokenResponse)
-@limiter.limit("5/minute")
+@limiter.limit("500/minute")
 async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     user = await db.user.find_unique(where={"email": form_data.username})
     
@@ -51,7 +53,8 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
             detail="Account locked due to too many failed login attempts. Try again later."
         )
         
-    if not pwd_context.verify(form_data.password, user.passwordHash):
+    is_valid_password = await asyncio.to_thread(pwd_context.verify, form_data.password, user.passwordHash)
+    if not is_valid_password:
         new_attempts = user.failedLoginAttempts + 1
         update_data = {"failedLoginAttempts": new_attempts}
         
@@ -230,10 +233,11 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 async def change_password(req: ChangePasswordRequest, current_user = Depends(get_current_user)):
     user = await db.user.find_unique(where={"id": current_user.id})
     
-    if not pwd_context.verify(req.current_password, user.passwordHash):
+    is_valid_password = await asyncio.to_thread(pwd_context.verify, req.current_password, user.passwordHash)
+    if not is_valid_password:
         raise HTTPException(status_code=400, detail="Incorrect current password")
         
-    hashed_pw = pwd_context.hash(req.new_password)
+    hashed_pw = await asyncio.to_thread(pwd_context.hash, req.new_password)
     
     await db.user.update(
         where={"id": user.id},

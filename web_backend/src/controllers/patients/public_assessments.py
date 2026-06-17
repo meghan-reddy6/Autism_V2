@@ -26,16 +26,17 @@ async def submit_responses(token: str, data: PublicAssessmentIngestion, session 
         raise HTTPException(status_code=400, detail="Assessment already submitted")
         
     # Commit the full ePHI payload to the PostgreSQL database layer FIRST
-    for resp in data.responses:
-        await db.assessmentresponse.create(
-            data={
-                "tenantId": session.tenantId,
-                "assessmentSessionId": session.id,
-                "fieldName": resp.fieldName,
-                "value": json.dumps(resp.value),
-                "metadata": json.dumps(resp.metadata) if resp.metadata else "{}"
-            }
-        )
+    response_records = [
+        {
+            "tenantId": session.tenantId,
+            "assessmentSessionId": session.id,
+            "fieldName": resp.fieldName,
+            "value": json.dumps(resp.value),
+            "metadata": json.dumps(resp.metadata) if resp.metadata else "{}"
+        }
+        for resp in data.responses
+    ]
+    await db.assessmentresponse.create_many(data=response_records)
         
     # Update session status
     await db.assessmentsession.update(

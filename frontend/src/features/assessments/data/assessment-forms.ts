@@ -1,10 +1,15 @@
 export type QuestionType = "select" | "radio" | "text";
 
+export interface QuestionOption {
+  label: string;
+  value: number;
+}
+
 export interface Question {
   name: string;
   label: string;
   type: QuestionType;
-  options?: string[];
+  options?: QuestionOption[];
   required?: boolean;
 }
 
@@ -45,7 +50,10 @@ export const ASSESSMENT_FORMS: Record<string, AssessmentFormSchema> = {
       name: `mchat_${index + 1}`,
       label,
       type: "select",
-      options: ["Yes", "No"],
+      options: [
+        { label: "Yes", value: 1 },
+        { label: "No", value: 0 }
+      ],
       required: true,
     })),
   },
@@ -63,7 +71,12 @@ export const ASSESSMENT_FORMS: Record<string, AssessmentFormSchema> = {
       name: `cars_${index + 1}`,
       label,
       type: "select",
-      options: ["Normal", "Mildly abnormal", "Moderately abnormal", "Severely abnormal"],
+      options: [
+        { label: "Normal", value: 1 },
+        { label: "Mildly abnormal", value: 2 },
+        { label: "Moderately abnormal", value: 3 },
+        { label: "Severely abnormal", value: 4 }
+      ],
       required: true,
     })),
   },
@@ -117,7 +130,12 @@ export const ASSESSMENT_FORMS: Record<string, AssessmentFormSchema> = {
       name: `gars_${index + 1}`,
       label: `${index + 1}. ${question}`,
       type: "select",
-      options: ["Never", "Seldom", "Sometimes", "Frequently"],
+      options: [
+        { label: "Never", value: 0 },
+        { label: "Seldom", value: 1 },
+        { label: "Sometimes", value: 2 },
+        { label: "Frequently", value: 3 }
+      ],
       required: true,
     })),
   }

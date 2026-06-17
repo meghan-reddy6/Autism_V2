@@ -19,12 +19,11 @@ interface CDSSModalProps {
   onClose: () => void;
 }
 
+import { AssessmentChartAdapter } from "@/src/features/assessments/logic/AssessmentChartAdapter";
+
 export function CDSSModal({ assessment, onClose }: CDSSModalProps) {
   // Format SHAP data for Recharts
-  const shapData = Object.entries(assessment.shapValues)
-    .map(([name, value]) => ({ name: name.replace("_", " "), importance: value }))
-    .sort((a, b) => b.importance - a.importance)
-    .slice(0, 5) // Top 5 features
+  const shapData = AssessmentChartAdapter.formatShapData(assessment.shapValues);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">

@@ -15,7 +15,7 @@ export function DiagnosticRadar({ chartData }: { chartData: any[] }) {
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm print:shadow-none print:border-slate-300 flex flex-col md:flex-row items-center gap-8">
       <div className="w-full md:w-1/2 min-h-[350px]">
           {chartData && chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={350}>
+            <ResponsiveContainer width="100%" aspect={4/3}>
               <RadarChart cx="50%" cy="50%" outerRadius="65%" data={chartData}>
                 <PolarGrid />
                 <PolarAngleAxis dataKey="domain" tick={{ fill: '#475569', fontSize: 11 }} />

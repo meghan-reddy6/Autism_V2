@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
+from datetime import datetime, timezone
 from fastapi.testclient import TestClient
 import os
 
@@ -10,6 +11,7 @@ from src.api.dependencies import validate_assessment_token
 
 class MockPatient:
     firstName = "John"
+    dateOfBirth = datetime(2020, 1, 1, tzinfo=timezone.utc)
 
 class MockSession:
     def __init__(self, status="CREATED", tenantId="tenant1", createdBy="user1", id="s1"):
@@ -37,6 +39,7 @@ def mock_external_services():
          patch("src.infrastructure.cache.redis_cache_manager.cache_service") as mock_cache:
         
         mock_db.assessmentresponse.create = AsyncMock()
+        mock_db.assessmentresponse.create_many = AsyncMock()
         mock_db.assessmentsession.update = AsyncMock()
         mock_db.auditlog.create = AsyncMock()
         mock_cache.invalidate_tags = AsyncMock()
@@ -63,12 +66,12 @@ def test_submit_responses_success(mock_external_services):
     
     response = client.post("/api/v1/public/assessment/valid-token/responses", json={
         "responses": [
-            {"fieldName": "cars_1", "value": "Normal", "metadata": {"test": "data"}}
+            {"fieldName": "cars_1", "value": 1.0, "metadata": {"test": "data"}}
         ]
     })
     
     assert response.status_code == 200
-    mock_db.assessmentresponse.create.assert_called_once()
+    mock_db.assessmentresponse.create_many.assert_called_once()
     mock_db.assessmentsession.update.assert_called_once()
     mock_db.auditlog.create.assert_called_once()
     mock_cache.invalidate_tags.assert_called_once()
@@ -79,7 +82,7 @@ def test_submit_responses_audit_failure(mock_external_services):
     
     response = client.post("/api/v1/public/assessment/valid-token/responses", json={"responses": []})
     assert response.status_code == 200 # Should not fail request
-    mock_db.assessmentresponse.create.assert_called()
+    mock_db.assessmentresponse.create_many.assert_called()
 
 def test_save_draft_duplicate():
     response = client.post("/api/v1/public/assessment/submitted-token/save-draft", json={"responses": []})

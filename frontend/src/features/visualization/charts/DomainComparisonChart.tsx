@@ -16,7 +16,7 @@ export function DomainComparisonChart({ chartData }: { chartData: any[] }) {
         </p>
         <div className="w-full min-h-[350px]">
           {comparisonData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={350}>
+            <ResponsiveContainer width="100%" aspect={16/9}>
               <BarChart data={comparisonData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="domain" tick={{ fill: '#475569', fontSize: 11 }} interval={0} tickMargin={10} />

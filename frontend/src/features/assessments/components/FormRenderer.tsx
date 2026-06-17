@@ -15,7 +15,7 @@ export function FormRenderer({
   const [status, setStatus] = useState(initialStatus);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<Record<string, number | string>>({});
 
   const isCompleted = status === "SUBMITTED" || status === "UNDER_REVIEW" || status === "COMPLETED" || status === "APPROVED" || status === "ARCHIVED";
 
@@ -30,7 +30,8 @@ export function FormRenderer({
   }
 
   const handleChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const parsed = parseFloat(value);
+    setFormData(prev => ({ ...prev, [name]: isNaN(parsed) ? value : parsed }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,16 +71,16 @@ export function FormRenderer({
           {field.type === "select" && field.options && (
             <div className="space-y-3">
               {field.options.map(option => (
-                <label key={option} className="flex items-center p-3 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50 hover:border-indigo-200 transition-colors">
+                <label key={option.label} className="flex items-center p-3 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50 hover:border-indigo-200 transition-colors">
                   <input 
                     type="radio" 
                     name={field.name}
-                    value={option}
+                    value={option.value}
                     required={field.required}
                     onChange={(e) => handleChange(field.name, e.target.value)}
                     className="w-5 h-5 text-indigo-600 border-slate-300 focus:ring-indigo-500"
                   />
-                  <span className="ml-3 text-slate-700">{option}</span>
+                  <span className="ml-3 text-slate-700">{option.label}</span>
                 </label>
               ))}
             </div>

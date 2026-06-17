@@ -79,7 +79,7 @@ export default function RecycleBinPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700/50">
-              {patients.map((p) => (
+              {patients.map((p: any) => (
                 <tr key={p.id} className="hover:bg-slate-700/30 transition-colors">
                   <td className="px-6 py-4 font-medium text-white">{p.firstName} {p.lastName}</td>
                   <td className="px-6 py-4 text-slate-400 font-mono text-sm">{p.mrn}</td>

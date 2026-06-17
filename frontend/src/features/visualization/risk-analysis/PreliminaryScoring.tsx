@@ -50,7 +50,7 @@ export function PreliminaryScoring({
           <div className="mt-2 border-t border-blue-100 pt-4">
               <h4 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-3">Top Driving Factors</h4>
               <div className="h-40 w-full text-xs">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" aspect={16/9}>
                   <BarChart data={shapData} layout="vertical" margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
                   <XAxis type="number" hide />
                   <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#1e3a8a', fontWeight: 600 }} width={80} />

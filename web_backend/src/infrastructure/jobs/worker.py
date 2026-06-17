@@ -87,6 +87,8 @@ class WorkerSettings:
     on_startup = startup
     on_shutdown = shutdown
     redis_settings = redis_settings
+    max_jobs = int(os.getenv("ARQ_MAX_JOBS", 50))
+    keep_result = 60
 
 _redis_pool = None
 

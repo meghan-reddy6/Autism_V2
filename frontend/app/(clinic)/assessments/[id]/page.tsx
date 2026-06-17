@@ -8,7 +8,8 @@ import { fetchApi } from "@/src/core/api/api-client";
 import { formatDate, formatDateTime } from "@/src/core/ui/tailwindClasses";
 
 import { SCALES } from "@/src/features/assessments/logic/assessmentScales";
-import { generateChartData, formatShapData, formatAge, getMaxScore } from "@/src/features/assessments/logic/assessmentScoreCalculator";
+import { formatAge } from "@/src/features/assessments/logic/assessmentScoreCalculator";
+import { AssessmentChartAdapter } from "@/src/features/assessments/logic/AssessmentChartAdapter";
 import { useAssessmentSession } from "@/src/features/assessments/hooks/useAssessmentSession";
 import { PreliminaryScoring, DiagnosticRadar, DomainComparisonChart } from "@/src/features/assessments/components/AssessmentVisuals";
 
@@ -83,9 +84,9 @@ export default function AssessmentResult() {
   const shapValues = mlSections?.shapValues || {};
 
   const ageFormatted = formatAge(patient.dateOfBirth);
-  const maxScore = getMaxScore(scaleType);
-  const chartData = generateChartData(itemScores, scaleType);
-  const shapData = formatShapData(shapValues);
+  const maxScore = AssessmentChartAdapter.getAxesConfig(scaleType)?.maxScore || null;
+  const chartData = AssessmentChartAdapter.generateDomainScores(itemScores, scaleType);
+  const shapData = AssessmentChartAdapter.formatShapData(shapValues);
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 print:bg-white print:py-0 print:px-0">
