@@ -33,6 +33,13 @@ export function FormRenderer({ token, schema, initialStatus }: { token: string, 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isReadOnly) return;
+    
+    // Require all schema fields to be answered
+    if (schema?.fields && Object.keys(responses).length < schema.fields.length) {
+      alert(`Please answer all ${schema.fields.length} questions before submitting.`);
+      return;
+    }
+    
     setSubmitting(true);
     try {
       const formatted = Object.keys(responses).map(k => ({ fieldName: k, value: responses[k] }));

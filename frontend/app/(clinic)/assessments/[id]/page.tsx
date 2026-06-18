@@ -78,10 +78,10 @@ export default function AssessmentResult() {
   const generatedReport = session.reports && session.reports.length > 0 ? session.reports[0] : null;
   const mlSections = generatedReport ? parseJson(generatedReport.sections, {}) : null;
 
-  const totalScore = mlSections?.totalScore;
-  const predictedRisk = mlSections?.predictedRisk;
+  const totalScore = mlSections?.totalScore || mlSections?.total_score;
+  const predictedRisk = mlSections?.predictedRisk || mlSections?.predicted_risk;
   const confidence = mlSections?.confidence;
-  const shapValues = mlSections?.shapValues || {};
+  const shapValues = mlSections?.shapValues || mlSections?.shap_values || {};
 
   const ageFormatted = formatAge(patient.dateOfBirth);
   const maxScore = AssessmentChartAdapter.getAxesConfig(scaleType)?.maxScore || null;
