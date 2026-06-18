@@ -88,3 +88,4 @@ All assessment scales adhere strictly to native numeric pipelines to guarantee m
 - **CARS**: 15 items natively evaluated as floats (`1.5`, `2.5`).
 - **M-CHAT-R**: 20 items.
 - **GARS-2**: Strictly 41 items with an explicit maximum fullMark ceiling of `39` for the Social Interaction domain.
+- **ISAA**: 40 items rated on a 5-point scale (1-5), evaluated dynamically across 6 clinical domains with a maximum possible total score of 200.
