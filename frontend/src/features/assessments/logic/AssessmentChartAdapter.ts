@@ -131,19 +131,19 @@ const ISAA_CONFIG: ScaleConfig = {
     for(let i=37; i<=40; i++) cognitive += parseIsaa(itemScores[`isaa_${i}`]);
 
     return [
-      { domain: 'Social Relationship', score: social, fullMark: 45, baseline: 9 },
-      { domain: 'Emotional Responsiveness', score: emotional, fullMark: 25, baseline: 5 },
-      { domain: 'Speech-Language', score: communication, fullMark: 45, baseline: 9 },
-      { domain: 'Behaviour Patterns', score: behavior, fullMark: 35, baseline: 7 },
-      { domain: 'Sensory Aspects', score: sensory, fullMark: 30, baseline: 6 },
-      { domain: 'Cognitive Component', score: cognitive, fullMark: 20, baseline: 4 }
+      { domain: 'Social Relationship', score: Number(social.toFixed(1)), fullMark: 45, baseline: 9 },
+      { domain: 'Emotional Responsiveness', score: Number(emotional.toFixed(1)), fullMark: 25, baseline: 5 },
+      { domain: 'Speech-Language', score: Number(communication.toFixed(1)), fullMark: 45, baseline: 9 },
+      { domain: 'Behaviour Patterns', score: Number(behavior.toFixed(1)), fullMark: 35, baseline: 7 },
+      { domain: 'Sensory Aspects', score: Number(sensory.toFixed(1)), fullMark: 30, baseline: 6 },
+      { domain: 'Cognitive Component', score: Number(cognitive.toFixed(1)), fullMark: 20, baseline: 4 }
     ];
   },
   calculateSeverity: (totalScore: number) => {
-    if (totalScore > 153) return "Severe Autism";
-    if (totalScore >= 107) return "Moderate Autism";
-    if (totalScore >= 70) return "Mild Autism";
-    return "Normal / No Autism";
+    if (totalScore < 70) return "Normal / No Autism";
+    if (totalScore < 107) return "Mild Autism";
+    if (totalScore < 154) return "Moderate Autism";
+    return "Severe Autism";
   }
 };
 

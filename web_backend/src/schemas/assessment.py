@@ -5,7 +5,7 @@ import uuid
 
 class AssessmentResponseItem(BaseModel):
     fieldName: str
-    value: int = Field(..., ge=0, le=5)
+    value: int = Field(..., ge=1, le=5)
     metadata: Optional[Dict] = None
 
 class PublicAssessmentIngestion(BaseModel):

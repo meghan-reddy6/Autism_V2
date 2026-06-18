@@ -97,18 +97,40 @@ async def generate_report(
     if now.day < dob.day:
         age_months -= 1
         
+    # Calculate ISAA Disability Percentage explicitly with safe fallback
+    disability_pct = 0
+    if scale_type == "ISAA":
+        if total_score < 70:
+            disability_pct = 0
+        elif total_score < 71:
+            disability_pct = 40
+        elif total_score < 89:
+            disability_pct = 50
+        elif total_score < 106:
+            disability_pct = 60
+        elif total_score < 124:
+            disability_pct = 70
+        elif total_score < 141:
+            disability_pct = 80
+        elif total_score < 159:
+            disability_pct = 90
+        else:
+            disability_pct = 100
+
     ml_payload = {
         "scale_type": scale_type,
         "normalized_score": total_score,
         "age_months": age_months,
-        "features": ml_features
+        "features": ml_features,
+        "disability_percentage": disability_pct
     }
     
     ml_metadata = {
         "scale_type": scale_type,
         "normalized_score": total_score,
         "age_months": age_months,
-        "features": ml_features
+        "features": ml_features,
+        "disability_percentage": disability_pct
     }
     
     # Pass to Arq queue
