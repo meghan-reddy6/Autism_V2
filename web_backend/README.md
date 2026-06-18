@@ -23,14 +23,11 @@ This will open a web portal (usually on `http://localhost:5555`) connected direc
 
 Heavy operational tasks (like dispatching ML evaluations) are completely decoupled from the primary FastAPI event loop using `arq`.
 
-To monitor active background jobs and worker states, you can connect directly to the Redis container from your terminal:
+To monitor active background jobs and worker states, you can connect directly to the Redis container using Docker Compose:
 ```bash
-redis-cli -h localhost -p 6379
+docker compose exec redis redis-cli
 ```
-*Note: If testing via docker exec:*
-```bash
-docker exec -it <redis-container-id> redis-cli
-```
+This avoids needing a local `redis-cli` installation on your host machine.
 
 ## 3. API Architectural Map
 
