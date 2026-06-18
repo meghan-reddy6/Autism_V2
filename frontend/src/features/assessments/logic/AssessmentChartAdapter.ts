@@ -107,11 +107,54 @@ const GARS_CONFIG: ScaleConfig = {
   }
 };
 
+const ISAA_CONFIG: ScaleConfig = {
+  axes: { maxScore: 200, expectedQuestions: 40 },
+  computeDomains: (itemScores) => {
+    const parseIsaa = (val: any) => typeof val === 'number' ? val : parseFloat(val) || 0;
+    
+    let social = 0;
+    for(let i=1; i<=9; i++) social += parseIsaa(itemScores[`isaa_${i}`]);
+    
+    let emotional = 0;
+    for(let i=10; i<=14; i++) emotional += parseIsaa(itemScores[`isaa_${i}`]);
+    
+    let communication = 0;
+    for(let i=15; i<=23; i++) communication += parseIsaa(itemScores[`isaa_${i}`]);
+    
+    let behavior = 0;
+    for(let i=24; i<=30; i++) behavior += parseIsaa(itemScores[`isaa_${i}`]);
+    
+    let sensory = 0;
+    for(let i=31; i<=36; i++) sensory += parseIsaa(itemScores[`isaa_${i}`]);
+    
+    let cognitive = 0;
+    for(let i=37; i<=40; i++) cognitive += parseIsaa(itemScores[`isaa_${i}`]);
+
+    return [
+      { domain: 'Social Relationship', score: social, fullMark: 45, baseline: 9 },
+      { domain: 'Emotional Responsiveness', score: emotional, fullMark: 25, baseline: 5 },
+      { domain: 'Speech-Language', score: communication, fullMark: 45, baseline: 9 },
+      { domain: 'Behaviour Patterns', score: behavior, fullMark: 35, baseline: 7 },
+      { domain: 'Sensory Aspects', score: sensory, fullMark: 30, baseline: 6 },
+      { domain: 'Cognitive Component', score: cognitive, fullMark: 20, baseline: 4 }
+    ];
+  },
+  calculateSeverity: (totalScore: number) => {
+    if (totalScore > 153) return "Severe Autism";
+    if (totalScore >= 107) return "Moderate Autism";
+    if (totalScore >= 70) return "Mild Autism";
+    return "Normal / No Autism";
+  }
+};
+
 export class AssessmentChartAdapter {
   static getConfig(scaleType: string): ScaleConfig | null {
-    if (scaleType === "CARS") return CARS_CONFIG;
-    if (scaleType === "M-CHAT-R") return MCHAT_CONFIG;
-    if (scaleType === "GARS-2") return GARS_CONFIG;
+    if (!scaleType) return null;
+    const type = scaleType.trim().toUpperCase();
+    if (type === "CARS") return CARS_CONFIG;
+    if (type === "M-CHAT-R") return MCHAT_CONFIG;
+    if (type === "GARS-2") return GARS_CONFIG;
+    if (type === "ISAA") return ISAA_CONFIG;
     return null;
   }
 
@@ -142,7 +185,7 @@ export class AssessmentChartAdapter {
     
     const data = Object.keys(parsedShap).map(key => {
        let name = key;
-       if (key.startsWith('cars_') || key.startsWith('gars_') || key.startsWith('mchat_')) {
+       if (key.startsWith('cars_') || key.startsWith('gars_') || key.startsWith('mchat_') || key.startsWith('isaa_')) {
           const num = key.split('_')[1];
           name = `Question ${num}`;
        } else if (key === 'age_months') {

@@ -59,6 +59,10 @@ def deterministic_fallback(payload: dict) -> dict:
         if score < 55: risk_level = "Low"
         elif score <= 70: risk_level = "Medium"
         else: risk_level = "High"
+    elif scale_type == "ISAA":
+        if score < 70: risk_level = "Low"
+        elif score <= 106: risk_level = "Medium"
+        else: risk_level = "High"
         
     return {
         "status": "fallback",

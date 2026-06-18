@@ -77,6 +77,12 @@ async def generate_report(
             elif val == "Seldom": score = 1
             elif val == "Sometimes": score = 2
             elif val == "Frequently": score = 3
+        elif scale_type == "ISAA":
+            if val == "Rarely (Upto 20%)": score = 1
+            elif val == "Sometimes (21-40%)": score = 2
+            elif val == "Frequently (41-60%)": score = 3
+            elif val == "Mostly (61-80%)": score = 4
+            elif val == "Always (81-100%)": score = 5
             
         total_score += score
         ml_features[resp.fieldName] = score
