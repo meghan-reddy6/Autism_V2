@@ -4,8 +4,8 @@ from src.schemas.assessment import PublicAssessmentIngestion, AssessmentResponse
 def test_phi_dropped_during_sanitization():
     payload = {
         "responses": [
-            {"fieldName": "mchat_1", "value": "No"},
-            {"fieldName": "mchat_2", "value": "Yes"}
+            {"fieldName": "mchat_1", "value": 0},
+            {"fieldName": "mchat_2", "value": 1}
         ],
         "patientName": "John Doe",
         "patientEmail": "john@example.com",

@@ -14,19 +14,21 @@ class MockPatient:
     dateOfBirth = datetime(2020, 1, 1, tzinfo=timezone.utc)
 
 class MockSession:
-    def __init__(self, status="CREATED", tenantId="tenant1", createdBy="user1", id="s1"):
+    def __init__(self, status="CREATED", tenantId="tenant1", createdBy="user1", id="s1", scaleType="CARS"):
         self.id = id
         self.status = status
         self.tenantId = tenantId
         self.createdBy = createdBy
         self.patient = MockPatient()
-        self.scaleType = "CARS"
+        self.scaleType = scaleType
 
 def override_validate_token(token: str):
     if token == "valid-token":
-        return MockSession(status="CREATED")
+        return MockSession(status="CREATED", scaleType="CARS")
     elif token == "submitted-token":
-        return MockSession(status="SUBMITTED")
+        return MockSession(status="SUBMITTED", scaleType="CARS")
+    elif token == "isaa-token":
+        return MockSession(status="CREATED", scaleType="ISAA")
     from fastapi import HTTPException
     raise HTTPException(status_code=404, detail="Invalid assessment token")
 
@@ -105,3 +107,28 @@ def test_save_draft_audit_failure(mock_external_services):
     response = client.post("/api/v1/public/assessment/valid-token/save-draft", json={"responses": []})
     assert response.status_code == 200 # Should not fail request
     mock_db.assessmentsession.update.assert_called_once()
+
+def test_submit_responses_isaa_validation_failure(mock_external_services):
+    response = client.post("/api/v1/public/assessment/isaa-token/responses", json={
+        "responses": [
+            {"fieldName": "isaa_1", "value": 0}
+        ]
+    })
+    assert response.status_code == 400
+    assert "ISAA items require a minimum clinical score of 1" in response.json()["detail"]
+
+def test_submit_responses_isaa_validation_success(mock_external_services):
+    response = client.post("/api/v1/public/assessment/isaa-token/responses", json={
+        "responses": [
+            {"fieldName": "isaa_1", "value": 1}
+        ]
+    })
+    assert response.status_code == 200
+
+def test_submit_responses_cars_zero_allowed(mock_external_services):
+    response = client.post("/api/v1/public/assessment/valid-token/responses", json={
+        "responses": [
+            {"fieldName": "cars_1", "value": 0}
+        ]
+    })
+    assert response.status_code == 200

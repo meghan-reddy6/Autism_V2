@@ -25,6 +25,13 @@ async def submit_responses(token: str, data: PublicAssessmentIngestion, session 
     if session.status in ["SUBMITTED", "UNDER_REVIEW", "APPROVED", "ARCHIVED"]:
         raise HTTPException(status_code=400, detail="Assessment already submitted")
         
+    # Trigger model-level dynamic validation based on scale type
+    data.scaleType = session.scaleType
+    try:
+        data.validate_isaa_bounds()
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        
     # Commit the full ePHI payload to the PostgreSQL database layer FIRST
     response_records = [
         {

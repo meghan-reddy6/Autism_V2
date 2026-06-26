@@ -5,7 +5,7 @@ import uuid
 
 class AssessmentResponseItem(BaseModel):
     fieldName: str
-    value: int = Field(..., ge=1, le=5)
+    value: int = Field(..., ge=0, le=5)
     metadata: Optional[Dict] = None
 
 class PublicAssessmentIngestion(BaseModel):
@@ -14,13 +14,16 @@ class PublicAssessmentIngestion(BaseModel):
     patientName: Optional[str] = None
     patientEmail: Optional[str] = None
     patientPhone: Optional[str] = None
+    scaleType: Optional[str] = None
     
     @model_validator(mode='after')
-    def validate_and_strip(self):
-        # We don't remove them here because the prompt says:
-        # "commits the full ePHI payload to the PostgreSQL database layer FIRST, 
-        # and then outputs an explicitly stripped, anonymized payload object"
+    def validate_isaa_bounds(self) -> 'PublicAssessmentIngestion':
+        if self.scaleType == "ISAA":
+            for item in self.responses:
+                if item.value < 1:
+                    raise ValueError(f"ISAA items require a minimum clinical score of 1. Found 0 in {item.fieldName}")
         return self
+
 
     def get_anonymized_payload(self, scale_type: str, age_months: int) -> dict:
         """
