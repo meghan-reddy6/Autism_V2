@@ -22,6 +22,9 @@ class PublicAssessmentIngestion(BaseModel):
             for item in self.responses:
                 if item.value < 1:
                     raise ValueError(f"ISAA items require a minimum clinical score of 1. Found 0 in {item.fieldName}")
+        elif self.scaleType == "GARS-2":
+            if len(self.responses) != 41:
+                raise ValueError(f"GARS-2 requires exactly 41 response items. Found {len(self.responses)}")
         return self
 
 

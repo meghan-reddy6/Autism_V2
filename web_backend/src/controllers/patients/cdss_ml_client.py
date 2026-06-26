@@ -48,21 +48,22 @@ def deterministic_fallback(payload: dict) -> dict:
     risk_level = "Medium"
     
     if scale_type == "CARS":
-        if score < 30: risk_level = "Low"
-        elif score <= 36.5: risk_level = "Medium"
-        else: risk_level = "High"
+        if score < 30: risk_level = "Non-Autistic"
+        elif score < 37: risk_level = "Mild-Moderate Autism"
+        else: risk_level = "Severe Autism"
     elif scale_type == "M-CHAT-R":
-        if score <= 2: risk_level = "Low"
-        elif score <= 7: risk_level = "Medium"
-        else: risk_level = "High"
+        if score < 3: risk_level = "Low Risk"
+        elif score < 8: risk_level = "Medium / Moderate Risk"
+        else: risk_level = "High Risk"
     elif scale_type == "GARS-2":
-        if score < 55: risk_level = "Low"
-        elif score <= 70: risk_level = "Medium"
-        else: risk_level = "High"
+        if score < 70: risk_level = "Low / Unlikely"
+        elif score < 85: risk_level = "Moderate / Possible"
+        else: risk_level = "High Probability"
     elif scale_type == "ISAA":
-        if score < 70: risk_level = "Low"
-        elif score <= 106: risk_level = "Medium"
-        else: risk_level = "High"
+        if score < 70: risk_level = "Normal / No Autism"
+        elif score < 107: risk_level = "Mild Autism"
+        elif score < 154: risk_level = "Moderate Autism"
+        else: risk_level = "Severe Autism"
         
     return {
         "status": "fallback",

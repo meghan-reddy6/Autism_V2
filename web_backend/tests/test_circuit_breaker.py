@@ -27,7 +27,7 @@ async def test_circuit_breaker_fallback_and_recovery(monkeypatch):
     for _ in range(3):
         res = await fetch_ml_metadata(payload)
         assert res["status"] == "fallback"
-        assert res["risk_level"] == "Medium" # Fallback logic for score 5
+        assert res["risk_level"] == "Medium / Moderate Risk" # Fallback logic for score 5
         
     assert cb.state == "OPEN"
     

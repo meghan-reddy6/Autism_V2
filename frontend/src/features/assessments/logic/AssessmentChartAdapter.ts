@@ -48,8 +48,8 @@ const CARS_CONFIG: ScaleConfig = {
   },
   calculateSeverity: (totalScore: number) => {
     if (totalScore < 30) return "Non-Autistic";
-    if (totalScore <= 36.5) return "Mild-Moderate";
-    return "Severe";
+    if (totalScore < 37) return "Mild-Moderate Autism";
+    return "Severe Autism";
   }
 };
 
@@ -74,14 +74,14 @@ const MCHAT_CONFIG: ScaleConfig = {
     ];
   },
   calculateSeverity: (totalScore: number) => {
-    if (totalScore >= 8) return "High Risk";
-    if (totalScore >= 3) return "Medium Risk";
-    return "Low Risk";
+    if (totalScore < 3) return "Low Risk";
+    if (totalScore < 8) return "Medium / Moderate Risk";
+    return "High Risk";
   }
 };
 
 const GARS_CONFIG: ScaleConfig = {
-  axes: { maxScore: 126, expectedQuestions: 42 },
+  axes: { maxScore: 123, expectedQuestions: 41 },
   computeDomains: (itemScores) => {
     const parseGars = (val: any) => typeof val === 'number' ? val : parseFloat(val) || 0;
     
@@ -101,9 +101,9 @@ const GARS_CONFIG: ScaleConfig = {
     ];
   },
   calculateSeverity: (totalScore: number) => {
-    if (totalScore >= 85) return "Very Likely Autistic";
-    if (totalScore >= 70) return "Possibly Autistic";
-    return "Unlikely Autistic";
+    if (totalScore < 70) return "Low / Unlikely";
+    if (totalScore < 85) return "Moderate / Possible";
+    return "High Probability";
   }
 };
 

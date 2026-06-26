@@ -62,23 +62,37 @@ async def generate_report(
         val = resp.value
         score = 0
         
+        try:
+            val_int = int(float(val))
+            is_numeric = True
+        except (ValueError, TypeError):
+            val_int = 0
+            is_numeric = False
+
         if scale_type == "CARS":
-            if val == "Normal": score = 1
+            if is_numeric:
+                score = val_int
+            elif val == "Normal": score = 1
             elif val == "Mildly abnormal": score = 2
             elif val == "Moderately abnormal": score = 3
             elif val == "Severely abnormal": score = 4
         elif scale_type == "M-CHAT-R":
+            is_yes = (val_int == 1) if is_numeric else (val == "Yes")
             if resp.fieldName in ["mchat_2", "mchat_5", "mchat_12"]:
-                if val == "Yes": score = 1
+                score = 1 if is_yes else 0
             else:
-                if val == "No": score = 1
+                score = 0 if is_yes else 1
         elif scale_type == "GARS-2":
-            if val == "Never": score = 0
+            if is_numeric:
+                score = val_int
+            elif val == "Never": score = 0
             elif val == "Seldom": score = 1
             elif val == "Sometimes": score = 2
             elif val == "Frequently": score = 3
         elif scale_type == "ISAA":
-            if val == "Rarely (Upto 20%)": score = 1
+            if is_numeric:
+                score = val_int
+            elif val == "Rarely (Upto 20%)": score = 1
             elif val == "Sometimes (21-40%)": score = 2
             elif val == "Frequently (41-60%)": score = 3
             elif val == "Mostly (61-80%)": score = 4
