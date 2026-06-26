@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y libatomic1 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y libatomic1 dos2unix && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -17,6 +17,6 @@ ENV NODE_TLS_REJECT_UNAUTHORIZED="1"
 ENV PYTHONHTTPSVERIFY="1"
 
 COPY entrypoint.sh .
-RUN chmod +x entrypoint.sh
+RUN dos2unix entrypoint.sh && chmod +x entrypoint.sh
 
 CMD ["./entrypoint.sh"]
